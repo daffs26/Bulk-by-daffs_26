@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { auth, db, isConfigured } from '../config/firebase';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { 
   doc, 
   setDoc, 
@@ -58,6 +59,7 @@ interface AppStateContextType {
   waterLoggedMl: number;
   streak: number;
   theme: 'dark' | 'light';
+  user: User | null;
   toggleTheme: () => void;
   setOnboardingData: (profile: UserProfile) => Promise<void>;
   addFoodLog: (food: Omit<FoodLog, 'id' | 'date'>) => Promise<void>;
@@ -66,6 +68,8 @@ interface AppStateContextType {
   addWater: (ml: number) => Promise<void>;
   resetWater: () => Promise<void>;
   resetAllData: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -137,6 +141,7 @@ export const calculateFitnessMetrics = (
 };
 
 export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
@@ -176,14 +181,12 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return;
         }
 
-        // Firebase Sync mode
-        signInAnonymously(auth).catch((err) => {
-          console.error('Firebase Auth sign-in failed:', err);
-        });
+        // Firebase Sync mode - Enforce Google Sign-In manually instead of signInAnonymously
 
-        unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            const uid = user.uid;
+        unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+          setUser(firebaseUser);
+          if (firebaseUser) {
+            const uid = firebaseUser.uid;
 
             // 1. Fetch User Profile
             const userDoc = await getDoc(doc(db, 'users', uid));
@@ -269,6 +272,13 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(0));
               }
             }
+          } else {
+            setUserProfile(null);
+            setIsOnboarded(false);
+            setFoodLogs([]);
+            setWeightLogs([]);
+            setWaterLoggedMl(0);
+            setStreak(0);
           }
         });
       } catch (e) {
@@ -430,6 +440,40 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const signInWithGoogle = async () => {
+    if (!isConfigured) {
+      Alert.alert('Offline Mode', 'Firebase is tidak terkonfigurasi. Google Sign-In tidak dapat digunakan.');
+      return;
+    }
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      Alert.alert('Login Gagal', error.message || 'Gagal login menggunakan Google.');
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    if (isConfigured) {
+      await signOut(auth);
+    }
+    setIsOnboarded(false);
+    setUserProfile(null);
+    setFoodLogs([]);
+    setWeightLogs([]);
+    setWaterLoggedMl(0);
+    setStreak(0);
+    
+    await AsyncStorage.removeItem('@bulk_user_profile');
+    await AsyncStorage.removeItem('@bulk_is_onboarded');
+    await AsyncStorage.removeItem('@bulk_food_logs');
+    await AsyncStorage.removeItem('@bulk_weight_logs');
+    await AsyncStorage.removeItem('@bulk_water_logged');
+    await AsyncStorage.removeItem('@bulk_streak');
+  };
+
   return (
     <AppStateContext.Provider
       value={{
@@ -440,6 +484,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         waterLoggedMl,
         streak,
         theme,
+        user,
         toggleTheme,
         setOnboardingData,
         addFoodLog,
@@ -448,6 +493,8 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addWater,
         resetWater,
         resetAllData,
+        signInWithGoogle,
+        logout,
       }}
     >
       {children}

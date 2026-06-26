@@ -2,12 +2,12 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
 import { useAppState } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
-import { User, Sun, Moon, RefreshCw, Activity, Scale, Info } from 'lucide-react-native';
+import { User, Sun, Moon, RefreshCw, Activity, Scale, Info, LogOut } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function SettingsScreen() {
-  const { userProfile, theme, toggleTheme, resetAllData } = useAppState();
+  const { userProfile, theme, toggleTheme, resetAllData, logout, user } = useAppState();
   const c = Colors[theme];
   const isDark = theme === 'dark';
 
@@ -152,16 +152,27 @@ export default function SettingsScreen() {
                     color: c.text,
                     letterSpacing: -0.2,
                   }}>
-                    Status Target Fisik
+                    {user?.displayName || 'Target Fisik Saya'}
                   </Text>
-                  <Text style={{
-                    fontSize: 12,
-                    fontFamily: 'Outfit_500Medium',
-                    color: Accent.primary,
-                    marginTop: 2,
-                  }}>
-                    {getGoalLabel(userProfile.goal)}
-                  </Text>
+                  {user?.email ? (
+                    <Text style={{
+                      fontSize: 10,
+                      fontFamily: 'Outfit_500Medium',
+                      color: c.textMuted,
+                      marginTop: 2,
+                    }}>
+                      {user.email}
+                    </Text>
+                  ) : (
+                    <Text style={{
+                      fontSize: 10,
+                      fontFamily: 'Outfit_500Medium',
+                      color: c.textMuted,
+                      marginTop: 2,
+                    }}>
+                      Offline / Local Mode
+                    </Text>
+                  )}
                 </View>
               </View>
 
@@ -210,6 +221,49 @@ export default function SettingsScreen() {
             </View>
           </Animated.View>
         )}
+
+        {/* ── Logout Button ── */}
+        <Animated.View entering={FadeInDown.duration(480)}>
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                'Keluar Akun',
+                'Apakah Anda yakin ingin keluar dari akun Google Anda?',
+                [
+                  { text: 'Batal', style: 'cancel' },
+                  { 
+                    text: 'Keluar', 
+                    style: 'destructive', 
+                    onPress: async () => {
+                      await logout();
+                    } 
+                  },
+                ]
+              );
+            }}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 16,
+              borderRadius: 14,
+              backgroundColor: c.surface,
+              borderWidth: 1,
+              borderColor: c.border,
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <LogOut color={Accent.primary} size={16} />
+            <Text style={{
+              fontSize: 13,
+              fontFamily: 'Outfit_600SemiBold',
+              color: c.text,
+            }}>
+              Keluar dari Akun
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* ── Danger Zone ── */}
         <Animated.View entering={FadeInDown.duration(500)}>

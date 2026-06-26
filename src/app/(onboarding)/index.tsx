@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppState, calculateFitnessMetrics, UserProfile } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
-import { ChevronRight, ChevronLeft, Award, Scale, Activity, ArrowRight, User as UserIcon } from 'lucide-react-native';
+import { ChevronRight, ChevronLeft, Award, Scale, Activity, ArrowRight, User as UserIcon, Flame, Sparkles, Barcode } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 
 export default function OnboardingScreen() {
-  const { setOnboardingData, theme } = useAppState();
+  const { setOnboardingData, theme, user, signInWithGoogle } = useAppState();
   const router = useRouter();
   const c = Colors[theme];
   const isDark = theme === 'dark';
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState<UserProfile['goal']>('maintenance');
@@ -195,25 +196,193 @@ export default function OnboardingScreen() {
           B<Text style={{ color: Accent.primary }}>ULK</Text>
         </Text>
         {/* Progress dots */}
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          {[1, 2, 3, 4].map((s) => (
-            <View
-              key={s}
-              style={{
-                width: s <= currentStep ? 20 : 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: s <= currentStep ? Accent.primary : c.surface3,
-              }}
-            />
-          ))}
-        </View>
+        {user && (
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {[1, 2, 3, 4].map((s) => (
+              <View
+                key={s}
+                style={{
+                  width: s <= currentStep ? 20 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: s <= currentStep ? Accent.primary : c.surface3,
+                }}
+              />
+            ))}
+          </View>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
 
+        {/* ══════════ STEP 0: Google Login ══════════ */}
+        {!user && (
+          <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 16 }}>
+            {/* Branding Header */}
+            <View style={{ alignItems: 'center', marginTop: 30, marginBottom: 20 }}>
+              <View style={{
+                width: 70,
+                height: 70,
+                borderRadius: 22,
+                backgroundColor: Accent.pale,
+                borderWidth: 1,
+                borderColor: Accent.glow,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 20,
+              }}>
+                <Flame size={36} color={Accent.primary} />
+              </View>
+              <Text style={{
+                fontSize: 32,
+                fontFamily: 'Outfit_800ExtraBold',
+                color: c.text,
+                letterSpacing: -1,
+                textAlign: 'center',
+              }}>
+                Selamat Datang di <Text style={{ color: Accent.primary }}>BULK</Text>
+              </Text>
+              <Text style={{
+                fontSize: 13,
+                fontFamily: 'Outfit_500Medium',
+                color: c.textSub,
+                marginTop: 8,
+                textAlign: 'center',
+                paddingHorizontal: 24,
+                lineHeight: 20,
+              }}>
+                Pindai porsi makan, analisis gizi mikro/makro, dan raih target kebugaran Anda secara presisi dengan AI.
+              </Text>
+            </View>
+
+            {/* Feature Showcase Grid */}
+            <View style={{ gap: 12, marginVertical: 16 }}>
+              {[
+                {
+                  title: '📸 AI Photo Recognition',
+                  desc: 'Pindai piring makan Anda via kamera untuk deteksi porsi & makronutrisi instan.',
+                  icon: Sparkles,
+                },
+                {
+                  title: '📊 Real-Time Barcode Scanner',
+                  desc: 'Scan produk kemasan menggunakan database global Open Food Facts.',
+                  icon: Barcode,
+                },
+                {
+                  title: '🔥 Custom Fitness Targets',
+                  desc: 'Formulasi kalori target & makro (Protein, Karbo, Lemak) personal harian.',
+                  icon: Scale,
+                },
+              ].map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <View
+                    key={idx}
+                    style={{
+                      flexDirection: 'row',
+                      gap: 12,
+                      padding: 16,
+                      borderRadius: 18,
+                      backgroundColor: c.surface,
+                      borderWidth: 1,
+                      borderColor: c.border,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <View style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      backgroundColor: isDark ? '#1C1C1E' : '#E5E7EB',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <Icon size={18} color={Accent.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text }}>
+                        {item.title}
+                      </Text>
+                      <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted, marginTop: 2, lineHeight: 16 }}>
+                        {item.desc}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Bottom Login Action Area */}
+            <View style={{ gap: 12, marginTop: 20 }}>
+              {isLoggingIn ? (
+                <View style={{
+                  paddingVertical: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <ActivityIndicator size="small" color={Accent.primary} />
+                  <Text style={{
+                    fontSize: 12,
+                    fontFamily: 'Outfit_600SemiBold',
+                    color: c.textSub,
+                    marginTop: 8,
+                  }}>
+                    Menghubungkan Akun Google...
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={async () => {
+                    setIsLoggingIn(true);
+                    try {
+                      await signInWithGoogle();
+                    } catch (err) {
+                      // Error is handled in useAppState
+                    } finally {
+                      setIsLoggingIn(false);
+                    }
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
+                    paddingVertical: 16,
+                    borderRadius: 14,
+                    backgroundColor: '#FFFFFF',
+                    borderWidth: 1,
+                    borderColor: '#E4E4E7',
+                  }}
+                >
+                  <View style={{ width: 18, height: 18, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#09090B', fontFamily: 'Outfit_800ExtraBold', fontSize: 16 }}>G</Text>
+                  </View>
+                  <Text style={{
+                    fontFamily: 'Outfit_600SemiBold',
+                    fontSize: 14,
+                    color: '#09090B',
+                  }}>
+                    Masuk dengan Google
+                  </Text>
+                </TouchableOpacity>
+              )}
+              
+              <Text style={{
+                fontSize: 10,
+                fontFamily: 'Outfit_500Medium',
+                color: c.textMuted,
+                textAlign: 'center',
+                lineHeight: 14,
+                paddingHorizontal: 20,
+              }}>
+                Dengan masuk, Anda menyetujui sinkronisasi data kebugaran Anda secara aman ke server Cloud Firestore kami.
+              </Text>
+            </View>
+          </Animated.View>
+        )}
+
         {/* ══════════ STEP 1: Goal ══════════ */}
-        {step === 1 && (
+        {user && step === 1 && (
           <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center', gap: 24 }}>
             <View style={{ marginBottom: 8 }}>
               <Text style={{
@@ -293,7 +462,7 @@ export default function OnboardingScreen() {
         )}
 
         {/* ══════════ STEP 2: Data Diri ══════════ */}
-        {step === 2 && (
+        {user && step === 2 && (
           <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
             <View style={{ marginBottom: 24 }}>
               <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Data Diri Kamu</Text>
@@ -390,7 +559,7 @@ export default function OnboardingScreen() {
         )}
 
         {/* ══════════ STEP 3: BMI Check ══════════ */}
-        {step === 3 && bmiDetails && (
+        {user && step === 3 && bmiDetails && (
           <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
             <View style={{ marginBottom: 24 }}>
               <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Pemeriksaan BMI</Text>
@@ -521,7 +690,7 @@ export default function OnboardingScreen() {
         )}
 
         {/* ══════════ STEP 5: Target Weight ══════════ */}
-        {step === 5 && bmiDetails && (
+        {user && step === 5 && bmiDetails && (
           <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
             <View style={{ marginBottom: 24 }}>
               <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Target Berat Badan</Text>
