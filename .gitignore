@@ -41,3 +41,8 @@ example
 # generated native folders
 /ios
 /android
+
+# local documentation and env files
+*.docx
+temp_plan.md
+.env
