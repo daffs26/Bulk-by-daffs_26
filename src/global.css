@@ -3,11 +3,25 @@
 @tailwind utilities;
 
 :root {
+  /* ── Typography ── */
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
+    Outfit, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
     Segoe UI Symbol, Noto Color Emoji;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+
+  /* ── Font Weights (BodyFit system: skip 400/700, use 300/500/600/800) ── */
+  --fw-light:     300;
+  --fw-medium:    500;
+  --fw-semibold:  600;
+  --fw-extrabold: 800;
+
+  /* ── Letter Spacing Tokens ── */
+  --ls-tighter:  -0.03em;
+  --ls-tight:    -0.01em;
+  --ls-normal:    0;
+  --ls-wide:      0.03em;
+  --ls-wider:     0.06em;
+  --ls-widest:    0.08em;
 }

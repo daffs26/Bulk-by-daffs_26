@@ -1,44 +1,34 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import { useAppState } from '@/hooks/useAppState';
-import { Camera, Image as ImageIcon, Sparkles, Check, X, RotateCcw } from 'lucide-react-native';
+import { Colors, Accent } from '@/constants/theme';
+import { Camera, Image as ImageIcon, Sparkles, Check, RotateCcw } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 
 export default function CameraScanScreen() {
   const { addFoodLog, theme } = useAppState();
+  const c = Colors[theme];
   const isDark = theme === 'dark';
 
-  // Scanner UI States
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'result'>('idle');
   const [portionScale, setPortionScale] = useState(1.0);
 
-  // Mock Result from AI
   const mockBaseResult = {
     name: 'Nasi Rames Daging Rendang',
     calories: 520,
     protein: 26,
     carbs: 62,
-    fat: 16
+    fat: 16,
   };
 
-  // Adjusted results based on slider/portion multiplier
   const adjustedCalories = Math.round(mockBaseResult.calories * portionScale);
   const adjustedProtein = Math.round(mockBaseResult.protein * portionScale);
   const adjustedCarbs = Math.round(mockBaseResult.carbs * portionScale);
   const adjustedFat = Math.round(mockBaseResult.fat * portionScale);
 
-  // Theme styling
-  const bgClass = isDark ? 'bg-dark-bg' : 'bg-light-bg';
-  const textClass = isDark ? 'text-white' : 'text-slate-900';
-  const textMutedClass = isDark ? 'text-gray-400' : 'text-slate-500';
-  const cardClass = isDark ? 'bg-dark-card border-neutral-900' : 'bg-white border-slate-100 shadow-sm';
-  const accentColor = isDark ? '#F97316' : '#2563EB';
-  const accentBgClass = isDark ? 'bg-orange-500/10 border-orange-500/20' : 'bg-blue-50 border-blue-100';
-
   const triggerScan = () => {
     setScanState('scanning');
-    
-    // Simulate AI parsing image (2.5 seconds)
     setTimeout(() => {
       setScanState('result');
       setPortionScale(1.0);
@@ -52,185 +42,369 @@ export default function CameraScanScreen() {
       protein: adjustedProtein,
       carbs: adjustedCarbs,
       fat: adjustedFat,
-      mealType: 'lunch' // Default to lunch for mock
+      mealType: 'lunch',
     });
-
     Alert.alert('Log Berhasil', 'Makanan hasil scan AI berhasil dicatat di Diary Makan Siang!');
     setScanState('idle');
   };
 
   return (
-    <SafeAreaView className={`flex-1 ${bgClass}`}>
-      <View className="px-6 pt-6 pb-2">
-        <Text className={`text-2xl font-black ${textClass}`}>AI Scan Porsi</Text>
-        <Text className={`text-xs mt-1 ${textMutedClass}`}>Deteksi porsi & makro makanan via foto</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
+      {/* Header */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 }}>
+        <Text style={{
+          fontSize: 22,
+          fontFamily: 'Outfit_800ExtraBold',
+          color: c.text,
+          letterSpacing: -0.3,
+        }}>
+          AI <Text style={{ color: Accent.primary }}>Scan</Text> Porsi
+        </Text>
+        <Text style={{
+          fontSize: 12,
+          fontFamily: 'Outfit_500Medium',
+          color: c.textMuted,
+          marginTop: 4,
+          letterSpacing: 0.2,
+        }}>
+          Deteksi porsi & makro makanan via foto
+        </Text>
       </View>
 
-      <View className="flex-1 px-6 py-4 justify-center">
-        {scanState === 'idle' && (
-          <Animated.View entering={FadeIn} exiting={FadeOut} className="flex-1 justify-between py-6">
-            {/* Camera Viewfinder Mock */}
-            <View className={`flex-1 rounded-3xl border-2 border-dashed relative items-center justify-center overflow-hidden bg-neutral-950 ${
-              isDark ? 'border-neutral-800' : 'border-slate-200'
-            }`}>
-              {/* Guides */}
-              <View className="absolute top-8 left-8 w-8 h-8 border-t-4 border-l-4 border-orange-500 rounded-tl-lg" />
-              <View className="absolute top-8 right-8 w-8 h-8 border-t-4 border-r-4 border-orange-500 rounded-tr-lg" />
-              <View className="absolute bottom-8 left-8 w-8 h-8 border-b-4 border-l-4 border-orange-500 rounded-bl-lg" />
-              <View className="absolute bottom-8 right-8 w-8 h-8 border-b-4 border-r-4 border-orange-500 rounded-br-lg" />
+      <View style={{ flex: 1, paddingHorizontal: 20, paddingVertical: 16, justifyContent: 'center' }}>
 
-              <Camera size={48} color={isDark ? '#4B5563' : '#9CA3AF'} />
-              <Text className="text-gray-500 text-xs mt-4 font-semibold text-center px-8 leading-relaxed">
+        {/* ── IDLE State ── */}
+        {scanState === 'idle' && (
+          <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 16 }}>
+            {/* Camera Viewfinder */}
+            <View style={{
+              flex: 1,
+              borderRadius: 24,
+              borderWidth: 2,
+              borderStyle: 'dashed',
+              borderColor: c.border,
+              backgroundColor: isDark ? '#0A0A0B' : '#F0F0F0',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              position: 'relative',
+            }}>
+              {/* Corner brackets */}
+              <View style={{ position: 'absolute', top: 24, left: 24, width: 28, height: 28, borderTopWidth: 3, borderLeftWidth: 3, borderColor: Accent.primary, borderTopLeftRadius: 6 }} />
+              <View style={{ position: 'absolute', top: 24, right: 24, width: 28, height: 28, borderTopWidth: 3, borderRightWidth: 3, borderColor: Accent.primary, borderTopRightRadius: 6 }} />
+              <View style={{ position: 'absolute', bottom: 24, left: 24, width: 28, height: 28, borderBottomWidth: 3, borderLeftWidth: 3, borderColor: Accent.primary, borderBottomLeftRadius: 6 }} />
+              <View style={{ position: 'absolute', bottom: 24, right: 24, width: 28, height: 28, borderBottomWidth: 3, borderRightWidth: 3, borderColor: Accent.primary, borderBottomRightRadius: 6 }} />
+
+              <Camera size={48} color={c.textMuted} />
+              <Text style={{
+                fontSize: 12,
+                fontFamily: 'Outfit_500Medium',
+                color: c.textMuted,
+                marginTop: 16,
+                textAlign: 'center',
+                paddingHorizontal: 32,
+                lineHeight: 20,
+              }}>
                 Posisikan piring makanan tepat di dalam kotak pembatas.
               </Text>
             </View>
 
-            {/* Instruction Banner */}
-            <View className={`p-4 rounded-2xl border mt-4 ${cardClass}`}>
-              <Text className={`text-xs font-semibold ${isDark ? 'text-amber-500' : 'text-blue-600'} mb-1`}>
+            {/* Tips card */}
+            <View style={{
+              padding: 16,
+              borderRadius: 18,
+              backgroundColor: Accent.pale,
+              borderWidth: 1,
+              borderColor: Accent.glow,
+              marginTop: 16,
+            }}>
+              <Text style={{
+                fontSize: 12,
+                fontFamily: 'Outfit_600SemiBold',
+                color: Accent.primary,
+                marginBottom: 4,
+              }}>
                 💡 Tips Akurasi Porsi
               </Text>
-              <Text className={`text-xs leading-relaxed ${textMutedClass}`}>
-                Letakkan tangan Anda atau koin di sebelah piring sebagai acuan ukuran skala objek agar AI dapat menghitung porsi secara presisi.
+              <Text style={{
+                fontSize: 11,
+                fontFamily: 'Outfit_500Medium',
+                color: isDark ? 'rgba(255,140,51,0.7)' : 'rgba(224,92,0,0.8)',
+                lineHeight: 18,
+              }}>
+                Letakkan tangan atau koin di sebelah piring sebagai acuan skala agar AI dapat menghitung porsi lebih presisi.
               </Text>
             </View>
 
             {/* Action buttons */}
-            <View className="flex-row space-x-3 mt-5">
-              <TouchableOpacity
-                className={`flex-1 py-4 rounded-xl border-2 items-center flex-row justify-center space-x-2 ${
-                  isDark ? 'border-neutral-800 bg-neutral-900' : 'border-slate-200 bg-white'
-                }`}
-              >
-                <ImageIcon size={20} color={isDark ? '#FFF' : '#334155'} />
-                <Text className={`font-bold ${textClass}`}>Unggah Galeri</Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+              <TouchableOpacity style={{
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                paddingVertical: 16,
+                borderRadius: 14,
+                backgroundColor: c.surface2,
+                borderWidth: 1,
+                borderColor: c.border,
+              }}>
+                <ImageIcon size={18} color={c.text} />
+                <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 14, color: c.text }}>Galeri</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={triggerScan}
-                className="flex-1 py-4 rounded-xl flex-row items-center justify-center space-x-2"
-                style={{ backgroundColor: accentColor }}
-              >
-                <Sparkles size={20} color="white" />
-                <Text className="text-white font-bold text-base">Ambil Foto</Text>
+              <TouchableOpacity onPress={triggerScan} style={{ flex: 1 }}>
+                <LinearGradient
+                  colors={[Accent.primary, Accent.primaryDark]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    paddingVertical: 16,
+                    borderRadius: 14,
+                  }}
+                >
+                  <Sparkles size={18} color="white" />
+                  <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 14, color: '#FFF' }}>Ambil Foto</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </Animated.View>
         )}
 
+        {/* ── SCANNING State ── */}
         {scanState === 'scanning' && (
-          <Animated.View entering={FadeIn} exiting={FadeOut} className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={accentColor} />
-            <Text className={`text-base font-bold mt-6 ${textClass}`}>Menganalisis Foto Makanan...</Text>
-            <Text className={`text-xs mt-1.5 ${textMutedClass}`}>Mengestimasi porsi pembanding & volume makro</Text>
+          <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={Accent.primary} />
+            <Text style={{
+              fontSize: 16,
+              fontFamily: 'Outfit_600SemiBold',
+              color: c.text,
+              marginTop: 24,
+              letterSpacing: -0.2,
+            }}>
+              Menganalisis Foto Makanan...
+            </Text>
+            <Text style={{
+              fontSize: 12,
+              fontFamily: 'Outfit_500Medium',
+              color: c.textMuted,
+              marginTop: 6,
+            }}>
+              Mengestimasi porsi & volume makro
+            </Text>
           </Animated.View>
         )}
 
+        {/* ── RESULT State ── */}
         {scanState === 'result' && (
-          <Animated.View entering={FadeIn} layout={Layout.springify()} className="flex-1 justify-between py-4">
-            
-            {/* Mock Image Taken */}
-            <View className="h-44 w-full rounded-2xl overflow-hidden bg-neutral-800 relative mb-4">
-              {/* Display a simple placeholder for food or styled graphics */}
-              <View className="absolute inset-0 bg-neutral-950 items-center justify-center">
-                <ImageIcon size={40} color="#4B5563" />
-                <Text className="text-gray-500 text-xs mt-2 font-semibold">Hasil Foto Teranalisis</Text>
-              </View>
-              <View className="absolute bottom-3 left-3 bg-black/60 px-2.5 py-1 rounded-md">
-                <Text className="text-white text-[10px] font-bold">Skala Referensi Terdeteksi</Text>
+          <Animated.View entering={FadeIn} layout={Layout.springify()} style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 8 }}>
+
+            {/* Mock image */}
+            <View style={{
+              height: 160,
+              borderRadius: 18,
+              backgroundColor: isDark ? '#0F0F11' : '#E4E4E7',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+              position: 'relative',
+            }}>
+              <ImageIcon size={36} color={c.textMuted} />
+              <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted, marginTop: 8 }}>Hasil Foto Teranalisis</Text>
+              <View style={{
+                position: 'absolute',
+                bottom: 10,
+                left: 10,
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 6,
+              }}>
+                <Text style={{ color: '#FFF', fontSize: 10, fontFamily: 'Outfit_600SemiBold' }}>Skala Referensi Terdeteksi</Text>
               </View>
             </View>
 
-            {/* Analysis Results Card */}
-            <View className={`p-6 rounded-3xl border flex-1 justify-between ${cardClass} mb-4`}>
+            {/* Result card */}
+            <View style={{
+              flex: 1,
+              backgroundColor: c.surface,
+              borderWidth: 1,
+              borderColor: c.border,
+              borderRadius: 24,
+              padding: 24,
+              justifyContent: 'space-between',
+              marginBottom: 16,
+            }}>
               <View>
-                <View className="flex-row items-center space-x-1.5 mb-1">
-                  <Sparkles size={16} color={accentColor} />
-                  <Text className={`text-xs font-semibold ${isDark ? 'text-orange-500' : 'text-blue-600'}`}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <Sparkles size={14} color={Accent.primary} />
+                  <Text style={{
+                    fontSize: 11,
+                    fontFamily: 'Outfit_600SemiBold',
+                    color: Accent.primary,
+                    letterSpacing: 0.3,
+                    textTransform: 'uppercase',
+                  }}>
                     AI Detection Success
                   </Text>
                 </View>
-                
-                <Text className={`text-xl font-black ${textClass}`}>{mockBaseResult.name}</Text>
-                
-                {/* Calories Display */}
-                <Text className={`text-3xl font-extrabold mt-3 ${textClass}`}>
-                  {adjustedCalories} <Text className="text-sm font-normal text-gray-500">kcal</Text>
+
+                <Text style={{
+                  fontSize: 18,
+                  fontFamily: 'Outfit_800ExtraBold',
+                  color: c.text,
+                  letterSpacing: -0.3,
+                }}>
+                  {mockBaseResult.name}
+                </Text>
+
+                <Text style={{
+                  fontSize: 36,
+                  fontFamily: 'Outfit_800ExtraBold',
+                  color: c.text,
+                  marginTop: 12,
+                  letterSpacing: -1,
+                }}>
+                  {adjustedCalories}{' '}
+                  <Text style={{ fontSize: 14, fontFamily: 'Outfit_500Medium', color: c.textSub }}>kcal</Text>
                 </Text>
 
                 {/* Macro breakdown */}
-                <View className="flex-row space-x-6 mt-4 py-3 border-t border-b border-neutral-800/10">
-                  <View>
-                    <Text className="text-[10px] text-gray-500 uppercase font-semibold">Protein</Text>
-                    <Text className={`text-sm font-bold ${textClass}`}>{adjustedProtein}g</Text>
-                  </View>
-                  <View>
-                    <Text className="text-[10px] text-gray-500 uppercase font-semibold">Karbohidrat</Text>
-                    <Text className={`text-sm font-bold ${textClass}`}>{adjustedCarbs}g</Text>
-                  </View>
-                  <View>
-                    <Text className="text-[10px] text-gray-500 uppercase font-semibold">Lemak</Text>
-                    <Text className={`text-sm font-bold ${textClass}`}>{adjustedFat}g</Text>
-                  </View>
+                <View style={{
+                  flexDirection: 'row',
+                  gap: 24,
+                  marginTop: 16,
+                  paddingVertical: 12,
+                  borderTopWidth: 1,
+                  borderBottomWidth: 1,
+                  borderColor: c.border,
+                }}>
+                  {[
+                    { label: 'Protein', value: adjustedProtein, color: Accent.primary },
+                    { label: 'Karbo', value: adjustedCarbs, color: '#3B82F6' },
+                    { label: 'Lemak', value: adjustedFat, color: '#F59E0B' },
+                  ].map((m) => (
+                    <View key={m.label}>
+                      <Text style={{
+                        fontSize: 10,
+                        fontFamily: 'Outfit_600SemiBold',
+                        color: c.textMuted,
+                        letterSpacing: 0.6,
+                        textTransform: 'uppercase',
+                        marginBottom: 2,
+                      }}>
+                        {m.label}
+                      </Text>
+                      <Text style={{
+                        fontSize: 14,
+                        fontFamily: 'Outfit_800ExtraBold',
+                        color: m.color,
+                        letterSpacing: -0.3,
+                      }}>
+                        {m.value}g
+                      </Text>
+                    </View>
+                  ))}
                 </View>
               </View>
 
-              {/* Dynamic Portion Adjustment slider layout */}
-              <View className="mt-4">
-                <Text className={`text-xs font-semibold mb-2 ${textClass}`}>
-                  Sesuaikan Porsi: <Text className="font-extrabold" style={{ color: accentColor }}>{portionScale.toFixed(1)}x</Text>
+              {/* Portion adjustment */}
+              <View style={{ marginTop: 16 }}>
+                <Text style={{
+                  fontSize: 12,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: c.text,
+                  marginBottom: 10,
+                }}>
+                  Sesuaikan Porsi:{' '}
+                  <Text style={{ fontFamily: 'Outfit_800ExtraBold', color: Accent.primary }}>
+                    {portionScale.toFixed(1)}x
+                  </Text>
                 </Text>
-                
-                {/* Custom Mock Slider via buttons for precision on React Native */}
-                <View className="flex-row items-center space-x-2">
+                <View style={{ flexDirection: 'row', gap: 8 }}>
                   <TouchableOpacity
-                    onPress={() => setPortionScale(prev => Math.max(0.5, prev - 0.1))}
-                    className={`flex-1 py-2.5 rounded-xl border items-center bg-neutral-900 border-neutral-800`}
+                    onPress={() => setPortionScale((p) => Math.max(0.5, p - 0.1))}
+                    style={portionBtnStyle(c)}
                   >
-                    <Text className="text-white font-bold text-xs">-0.1x</Text>
+                    <Text style={portionBtnTextStyle(c)}>-0.1x</Text>
                   </TouchableOpacity>
-
                   <TouchableOpacity
                     onPress={() => setPortionScale(1.0)}
-                    className={`flex-1 py-2.5 rounded-xl border items-center bg-neutral-900 border-neutral-800`}
+                    style={portionBtnStyle(c)}
                   >
-                    <Text className="text-white font-bold text-xs">Reset (1.0x)</Text>
+                    <Text style={portionBtnTextStyle(c)}>Reset</Text>
                   </TouchableOpacity>
-
                   <TouchableOpacity
-                    onPress={() => setPortionScale(prev => Math.min(3.0, prev + 0.1))}
-                    className={`flex-1 py-2.5 rounded-xl border items-center bg-neutral-900 border-neutral-800`}
+                    onPress={() => setPortionScale((p) => Math.min(3.0, p + 0.1))}
+                    style={portionBtnStyle(c)}
                   >
-                    <Text className="text-white font-bold text-xs">+0.1x</Text>
+                    <Text style={portionBtnTextStyle(c)}>+0.1x</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
 
-            {/* Save Buttons */}
-            <View className="flex-row space-x-3">
+            {/* Save buttons */}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
               <TouchableOpacity
                 onPress={() => setScanState('idle')}
-                className={`py-4 px-6 rounded-xl border-2 items-center justify-center ${
-                  isDark ? 'border-neutral-800 bg-neutral-900' : 'border-slate-200 bg-white'
-                }`}
+                style={{
+                  paddingHorizontal: 20,
+                  paddingVertical: 16,
+                  borderRadius: 14,
+                  backgroundColor: c.surface2,
+                  borderWidth: 1,
+                  borderColor: c.border,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                <RotateCcw size={20} color={isDark ? '#FFF' : '#334155'} />
+                <RotateCcw size={18} color={c.text} />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={handleSaveResult}
-                className="flex-1 py-4 rounded-xl flex-row items-center justify-center space-x-2"
-                style={{ backgroundColor: accentColor }}
-              >
-                <Check size={20} color="white" />
-                <Text className="text-white font-bold text-base">Simpan ke Diary</Text>
+              <TouchableOpacity onPress={handleSaveResult} style={{ flex: 1 }}>
+                <LinearGradient
+                  colors={[Accent.primary, Accent.primaryDark]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    paddingVertical: 16,
+                    borderRadius: 14,
+                  }}
+                >
+                  <Check size={18} color="white" />
+                  <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 15, color: '#FFF' }}>Simpan ke Diary</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
-
           </Animated.View>
         )}
       </View>
     </SafeAreaView>
   );
 }
+
+const portionBtnStyle = (c: typeof Colors.dark) => ({
+  flex: 1 as const,
+  paddingVertical: 10,
+  borderRadius: 10,
+  alignItems: 'center' as const,
+  backgroundColor: c.surface2,
+  borderWidth: 1,
+  borderColor: c.border,
+});
+
+const portionBtnTextStyle = (c: typeof Colors.dark) => ({
+  fontSize: 12,
+  fontFamily: 'Outfit_600SemiBold' as const,
+  color: c.text,
+});

@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppState, calculateFitnessMetrics, UserProfile } from '@/hooks/useAppState';
+import { Colors, Accent } from '@/constants/theme';
 import { ChevronRight, ChevronLeft, Award, Scale, Activity, ArrowRight, User as UserIcon } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 
 export default function OnboardingScreen() {
   const { setOnboardingData, theme } = useAppState();
   const router = useRouter();
-
+  const c = Colors[theme];
   const isDark = theme === 'dark';
 
-  // State variables for inputs
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState<UserProfile['goal']>('maintenance');
   const [gender, setGender] = useState<'male' | 'female'>('male');
@@ -21,7 +22,6 @@ export default function OnboardingScreen() {
   const [activityLevel, setActivityLevel] = useState<UserProfile['activityLevel']>('sedentary');
   const [weightTarget, setWeightTarget] = useState('');
 
-  // Local calculation result state for step 3/4
   const [bmiDetails, setBmiDetails] = useState<{
     bmi: number;
     tdee: number;
@@ -30,16 +30,6 @@ export default function OnboardingScreen() {
     isCompatible: boolean;
     warningMsg: string;
   } | null>(null);
-
-  // Theme-aware styles
-  const bgClass = isDark ? 'bg-dark-bg' : 'bg-light-bg';
-  const textClass = isDark ? 'text-white' : 'text-slate-900';
-  const textMutedClass = isDark ? 'text-gray-400' : 'text-slate-500';
-  const cardClass = isDark ? 'bg-dark-card border-neutral-800' : 'bg-light-card border-slate-200';
-  const inputClass = isDark 
-    ? 'bg-neutral-900 border-neutral-800 text-white focus:border-dark-accent' 
-    : 'bg-white border-slate-300 text-slate-900 focus:border-light-accent';
-  const accentColor = isDark ? '#F97316' : '#2563EB';
 
   const validateStep2 = () => {
     const ageNum = parseInt(age);
@@ -76,58 +66,32 @@ export default function OnboardingScreen() {
     else if (metrics.bmi < 30) category = 'Overweight';
     else category = 'Obese';
 
-    // Validation matching goal with BMI
     let isCompatible = true;
     let warningMsg = '';
 
     if (goal === 'bulking' && metrics.bmi >= 25) {
       isCompatible = false;
-      warningMsg = `Your current BMI is ${metrics.bmi} (${category}). Bulking is not recommended when overweight. A maintenance or cutting goal might be safer for your joints and metabolism.`;
+      warningMsg = `BMI kamu ${metrics.bmi} (${category}). Bulking tidak direkomendasikan saat overweight. Coba maintenance atau cutting.`;
     } else if (goal === 'cutting' && metrics.bmi < 18.5) {
       isCompatible = false;
-      warningMsg = `Your current BMI is ${metrics.bmi} (${category}). Cutting is not recommended when underweight. A bulking or maintenance goal is safer to ensure proper body nourishment.`;
+      warningMsg = `BMI kamu ${metrics.bmi} (${category}). Cutting tidak direkomendasikan saat underweight. Coba bulking atau maintenance.`;
     }
 
-    setBmiDetails({
-      bmi: metrics.bmi,
-      tdee: metrics.tdee,
-      targetCalories: metrics.targetCalories,
-      category,
-      isCompatible,
-      warningMsg,
-    });
-
+    setBmiDetails({ bmi: metrics.bmi, tdee: metrics.tdee, targetCalories: metrics.targetCalories, category, isCompatible, warningMsg });
     setStep(3);
   };
 
-  const handleConfirmGoal = () => {
-    // If compatible, or user explicitly continued, go to step 5 (target weight)
-    setStep(5);
-  };
+  const handleConfirmGoal = () => setStep(5);
 
   const calculateEstimation = () => {
     const targetW = parseFloat(weightTarget);
     const currentW = parseFloat(weightCurrent);
-
-    if (isNaN(targetW) || targetW < 30 || targetW > 300) {
-      return null;
-    }
-
+    if (isNaN(targetW) || targetW < 30 || targetW > 300) return null;
     const diff = Math.abs(targetW - currentW);
     if (diff === 0) return { weeks: 0, text: 'You are at your target!' };
-
-    // 1 kg = ~7700 kcal. Daily deficit/surplus is 400 kcal.
-    // 7700 / 400 = 19.25 days per kg.
     const daysNeeded = Math.round(diff * 19.25);
     const weeksNeeded = Number((daysNeeded / 7).toFixed(1));
-
-    let actionWord = goal === 'cutting' ? 'lose' : 'gain';
-    if (goal === 'maintenance') actionWord = 'stabilize';
-
-    return {
-      weeks: weeksNeeded,
-      text: `${weeksNeeded} weeks to ${actionWord} ${diff.toFixed(1)} kg (${daysNeeded} days total).`
-    };
+    return { weeks: weeksNeeded, text: `${weeksNeeded} weeks (${daysNeeded} days)` };
   };
 
   const handleFinishOnboarding = async () => {
@@ -140,14 +104,12 @@ export default function OnboardingScreen() {
       Alert.alert('Invalid Target Weight', 'Please enter a valid target weight between 30 and 300 kg.');
       return;
     }
-
-    // Goal checks
     if (goal === 'cutting' && targetW >= weightNum) {
-      Alert.alert('Goal Mismatch', 'Your target weight must be lower than current weight for Cutting.');
+      Alert.alert('Goal Mismatch', 'Target weight must be lower than current weight for Cutting.');
       return;
     }
     if (goal === 'bulking' && targetW <= weightNum) {
-      Alert.alert('Goal Mismatch', 'Your target weight must be higher than current weight for Bulking.');
+      Alert.alert('Goal Mismatch', 'Target weight must be higher than current weight for Bulking.');
       return;
     }
 
@@ -165,300 +127,392 @@ export default function OnboardingScreen() {
       bmi: finalMetrics.bmi,
       tdee: finalMetrics.tdee,
       targetCalories: finalMetrics.targetCalories,
-      targetMacros: finalMetrics.targetMacros
+      targetMacros: finalMetrics.targetMacros,
     };
 
     await setOnboardingData(profile);
     router.replace('/(tabs)');
   };
 
+  /* ── Shared Styles ── */
+  const inputStyle = {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: c.surface2,
+    borderWidth: 1,
+    borderColor: c.border,
+    fontFamily: 'Outfit_500Medium' as const,
+    fontSize: 15,
+    color: c.text,
+  };
+
+  const primaryBtnStyle = {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+    paddingVertical: 16,
+    borderRadius: 14,
+  };
+
+  const secondaryBtnStyle = {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: c.surface2,
+    borderWidth: 1,
+    borderColor: c.border,
+  };
+
+  /* ── Step Progress Dots ── */
+  const totalSteps = 4;
+  const currentStep = step === 1 ? 1 : step === 2 ? 2 : step === 3 ? 3 : 4;
+
   return (
-    <SafeAreaView className={`flex-1 ${bgClass}`}>
-      <View className="px-6 py-4 flex-row items-center justify-between border-b border-neutral-800/10">
-        <Text className={`text-xl font-bold ${textClass}`}>BULK</Text>
-        <Text className={`text-sm ${textMutedClass}`}>Step {step} of 5</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
+      {/* Top bar */}
+      <View style={{
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: c.border,
+      }}>
+        <Text style={{
+          fontSize: 20,
+          fontFamily: 'Outfit_800ExtraBold',
+          color: c.text,
+          letterSpacing: -0.3,
+        }}>
+          B<Text style={{ color: Accent.primary }}>ULK</Text>
+        </Text>
+        {/* Progress dots */}
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {[1, 2, 3, 4].map((s) => (
+            <View
+              key={s}
+              style={{
+                width: s <= currentStep ? 20 : 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: s <= currentStep ? Accent.primary : c.surface3,
+              }}
+            />
+          ))}
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} className="px-6 py-4">
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
+
+        {/* ══════════ STEP 1: Goal ══════════ */}
         {step === 1 && (
-          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} className="flex-1 justify-center space-y-6">
-            <View className="mb-6">
-              <Text className={`text-3xl font-black ${textClass} tracking-tight`}>Pilih Goal Kamu</Text>
-              <Text className={`text-base mt-2 ${textMutedClass}`}>
+          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center', gap: 24 }}>
+            <View style={{ marginBottom: 8 }}>
+              <Text style={{
+                fontSize: 28,
+                fontFamily: 'Outfit_800ExtraBold',
+                color: c.text,
+                letterSpacing: -0.5,
+              }}>
+                Pilih Goal Kamu
+              </Text>
+              <Text style={{
+                fontSize: 14,
+                fontFamily: 'Outfit_500Medium',
+                color: c.textSub,
+                marginTop: 8,
+                lineHeight: 22,
+              }}>
                 Tentukan target utama kesehatan tubuhmu saat ini.
               </Text>
             </View>
 
-            <View className="space-y-4">
-              <TouchableOpacity
-                onPress={() => setGoal('cutting')}
-                className={`p-5 rounded-2xl border-2 flex-row items-center justify-between ${
-                  goal === 'cutting' 
-                    ? isDark ? 'border-orange-500 bg-neutral-900/60' : 'border-blue-500 bg-blue-50/50' 
-                    : isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                }`}
-              >
-                <View className="flex-1 pr-4">
-                  <Text className={`text-lg font-bold ${textClass}`}>Cutting</Text>
-                  <Text className={`text-sm mt-1 ${textMutedClass}`}>
-                    Menurunkan berat badan & kadar lemak tubuh secara bertahap.
-                  </Text>
-                </View>
-                <Activity color={goal === 'cutting' ? accentColor : '#9CA3AF'} size={24} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setGoal('bulking')}
-                className={`p-5 rounded-2xl border-2 flex-row items-center justify-between ${
-                  goal === 'bulking'
-                    ? isDark ? 'border-orange-500 bg-neutral-900/60' : 'border-blue-500 bg-blue-50/50'
-                    : isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                }`}
-              >
-                <View className="flex-1 pr-4">
-                  <Text className={`text-lg font-bold ${textClass}`}>Bulking</Text>
-                  <Text className={`text-sm mt-1 ${textMutedClass}`}>
-                    Meningkatkan massa otot & berat badan secara terkontrol.
-                  </Text>
-                </View>
-                <Award color={goal === 'bulking' ? accentColor : '#9CA3AF'} size={24} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setGoal('maintenance')}
-                className={`p-5 rounded-2xl border-2 flex-row items-center justify-between ${
-                  goal === 'maintenance'
-                    ? isDark ? 'border-orange-500 bg-neutral-900/60' : 'border-blue-500 bg-blue-50/50'
-                    : isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                }`}
-              >
-                <View className="flex-1 pr-4">
-                  <Text className={`text-lg font-bold ${textClass}`}>Maintenance</Text>
-                  <Text className={`text-sm mt-1 ${textMutedClass}`}>
-                    Menjaga berat badan stabil & komposisi tubuh saat ini.
-                  </Text>
-                </View>
-                <Scale color={goal === 'maintenance' ? accentColor : '#9CA3AF'} size={24} />
-              </TouchableOpacity>
+            <View style={{ gap: 12 }}>
+              {[
+                { id: 'cutting' as const, title: 'Cutting', desc: 'Menurunkan berat badan & kadar lemak tubuh secara bertahap.', icon: Activity },
+                { id: 'bulking' as const, title: 'Bulking', desc: 'Meningkatkan massa otot & berat badan secara terkontrol.', icon: Award },
+                { id: 'maintenance' as const, title: 'Maintenance', desc: 'Menjaga berat badan stabil & komposisi tubuh saat ini.', icon: Scale },
+              ].map((g) => {
+                const isActive = goal === g.id;
+                const IconComp = g.icon;
+                return (
+                  <TouchableOpacity
+                    key={g.id}
+                    onPress={() => setGoal(g.id)}
+                    style={{
+                      padding: 20,
+                      borderRadius: 18,
+                      borderWidth: 2,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderColor: isActive ? Accent.primary : c.border,
+                      backgroundColor: isActive ? Accent.pale : c.surface,
+                    }}
+                  >
+                    <View style={{ flex: 1, paddingRight: 16 }}>
+                      <Text style={{
+                        fontSize: 16,
+                        fontFamily: 'Outfit_600SemiBold',
+                        color: c.text,
+                        letterSpacing: -0.1,
+                      }}>
+                        {g.title}
+                      </Text>
+                      <Text style={{
+                        fontSize: 13,
+                        fontFamily: 'Outfit_500Medium',
+                        color: c.textSub,
+                        marginTop: 4,
+                        lineHeight: 20,
+                      }}>
+                        {g.desc}
+                      </Text>
+                    </View>
+                    <IconComp color={isActive ? Accent.primary : c.textMuted} size={22} />
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            <TouchableOpacity
-              onPress={() => setStep(2)}
-              className="mt-8 py-4 rounded-xl flex-row items-center justify-center space-x-2"
-              style={{ backgroundColor: accentColor }}
-            >
-              <Text className="text-white font-bold text-base">Lanjut</Text>
-              <ChevronRight color="white" size={20} />
+            <TouchableOpacity onPress={() => setStep(2)} style={{ marginTop: 16 }}>
+              <LinearGradient colors={[Accent.primary, Accent.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={primaryBtnStyle}>
+                <Text style={{ color: '#FFF', fontFamily: 'Outfit_600SemiBold', fontSize: 15 }}>Lanjut</Text>
+                <ChevronRight color="white" size={18} />
+              </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
         )}
 
+        {/* ══════════ STEP 2: Data Diri ══════════ */}
         {step === 2 && (
-          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} className="flex-1 justify-center">
-            <View className="mb-6">
-              <Text className={`text-3xl font-black ${textClass} tracking-tight`}>Data Diri Kamu</Text>
-              <Text className={`text-base mt-2 ${textMutedClass}`}>
+          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Data Diri Kamu</Text>
+              <Text style={{ fontSize: 14, fontFamily: 'Outfit_500Medium', color: c.textSub, marginTop: 8, lineHeight: 22 }}>
                 Isi data fisik untuk kalkulasi kalori target yang akurat.
               </Text>
             </View>
 
-            <View className="space-y-4">
+            <View style={{ gap: 16 }}>
               {/* Gender */}
-              <View className="flex-row space-x-4 mb-2">
-                <TouchableOpacity
-                  onPress={() => setGender('male')}
-                  className={`flex-1 py-4 rounded-xl border-2 items-center ${
-                    gender === 'male' 
-                      ? isDark ? 'border-orange-500 bg-neutral-900' : 'border-blue-500 bg-blue-50'
-                      : isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                  }`}
-                >
-                  <Text className={`font-bold ${textClass}`}>Laki-laki</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setGender('female')}
-                  className={`flex-1 py-4 rounded-xl border-2 items-center ${
-                    gender === 'female'
-                      ? isDark ? 'border-orange-500 bg-neutral-900' : 'border-blue-500 bg-blue-50'
-                      : isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                  }`}
-                >
-                  <Text className={`font-bold ${textClass}`}>Perempuan</Text>
-                </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 4 }}>
+                {['male', 'female'].map((g) => (
+                  <TouchableOpacity
+                    key={g}
+                    onPress={() => setGender(g as any)}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 16,
+                      borderRadius: 14,
+                      borderWidth: 2,
+                      alignItems: 'center',
+                      borderColor: gender === g ? Accent.primary : c.border,
+                      backgroundColor: gender === g ? Accent.pale : c.surface,
+                    }}
+                  >
+                    <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 14, color: c.text }}>
+                      {g === 'male' ? 'Laki-laki' : 'Perempuan'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               {/* Age */}
               <View>
-                <Text className={`text-sm font-semibold mb-2 ${textClass}`}>Usia (Tahun)</Text>
-                <TextInput
-                  placeholder="Contoh: 24"
-                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                  keyboardType="numeric"
-                  value={age}
-                  onChangeText={setAge}
-                  className={`px-4 py-3 rounded-xl border-2 ${inputClass}`}
-                />
+                <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text, marginBottom: 6 }}>Usia (Tahun)</Text>
+                <TextInput placeholder="Contoh: 24" placeholderTextColor={c.textMuted} keyboardType="numeric" value={age} onChangeText={setAge} style={inputStyle} />
               </View>
 
               {/* Height */}
               <View>
-                <Text className={`text-sm font-semibold mb-2 ${textClass}`}>Tinggi Badan (cm)</Text>
-                <TextInput
-                  placeholder="Contoh: 172"
-                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                  keyboardType="numeric"
-                  value={height}
-                  onChangeText={setHeight}
-                  className={`px-4 py-3 rounded-xl border-2 ${inputClass}`}
-                />
+                <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text, marginBottom: 6 }}>Tinggi Badan (cm)</Text>
+                <TextInput placeholder="Contoh: 172" placeholderTextColor={c.textMuted} keyboardType="numeric" value={height} onChangeText={setHeight} style={inputStyle} />
               </View>
 
-              {/* Current Weight */}
+              {/* Weight */}
               <View>
-                <Text className={`text-sm font-semibold mb-2 ${textClass}`}>Berat Badan Sekarang (kg)</Text>
-                <TextInput
-                  placeholder="Contoh: 70"
-                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                  keyboardType="numeric"
-                  value={weightCurrent}
-                  onChangeText={setWeightCurrent}
-                  className={`px-4 py-3 rounded-xl border-2 ${inputClass}`}
-                />
+                <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text, marginBottom: 6 }}>Berat Badan Sekarang (kg)</Text>
+                <TextInput placeholder="Contoh: 70" placeholderTextColor={c.textMuted} keyboardType="numeric" value={weightCurrent} onChangeText={setWeightCurrent} style={inputStyle} />
               </View>
 
               {/* Activity Level */}
               <View>
-                <Text className={`text-sm font-semibold mb-2 ${textClass}`}>Level Aktivitas Harian</Text>
-                <View className="space-y-2">
+                <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text, marginBottom: 8 }}>Level Aktivitas Harian</Text>
+                <View style={{ gap: 8 }}>
                   {[
                     { id: 'sedentary', label: 'Sedentary (Jarang olahraga)' },
-                    { id: 'light', label: 'Lightly Active (Olahraga 1-3x / minggu)' },
-                    { id: 'active', label: 'Active (Olahraga 3-5x / minggu)' },
-                    { id: 'very_active', label: 'Very Active (Olahraga berat / fisik)' }
+                    { id: 'light', label: 'Lightly Active (1-3x / minggu)' },
+                    { id: 'active', label: 'Active (3-5x / minggu)' },
+                    { id: 'very_active', label: 'Very Active (Fisik berat)' },
                   ].map((level) => (
                     <TouchableOpacity
                       key={level.id}
                       onPress={() => setActivityLevel(level.id as any)}
-                      className={`px-4 py-3 rounded-xl border-2 ${
-                        activityLevel === level.id
-                          ? isDark ? 'border-orange-500 bg-neutral-900' : 'border-blue-500 bg-blue-50'
-                          : isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                      }`}
+                      style={{
+                        paddingHorizontal: 16,
+                        paddingVertical: 14,
+                        borderRadius: 14,
+                        borderWidth: 2,
+                        borderColor: activityLevel === level.id ? Accent.primary : c.border,
+                        backgroundColor: activityLevel === level.id ? Accent.pale : c.surface,
+                      }}
                     >
-                      <Text className={`text-sm ${textClass}`}>{level.label}</Text>
+                      <Text style={{ fontSize: 13, fontFamily: 'Outfit_500Medium', color: c.text }}>{level.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
             </View>
 
-            {/* Navigation buttons */}
-            <View className="flex-row space-x-4 mt-8">
-              <TouchableOpacity
-                onPress={() => setStep(1)}
-                className={`flex-1 py-4 rounded-xl border-2 flex-row items-center justify-center space-x-2 ${
-                  isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                }`}
-              >
-                <ChevronLeft color={isDark ? '#FFF' : '#334155'} size={20} />
-                <Text className={`font-bold text-base ${textClass}`}>Kembali</Text>
+            {/* Navigation */}
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 24 }}>
+              <TouchableOpacity onPress={() => setStep(1)} style={secondaryBtnStyle}>
+                <ChevronLeft color={c.text} size={18} />
+                <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 15, color: c.text }}>Kembali</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={processMetrics}
-                className="flex-1 py-4 rounded-xl flex-row items-center justify-center space-x-2"
-                style={{ backgroundColor: accentColor }}
-              >
-                <Text className="text-white font-bold text-base">Lanjut</Text>
-                <ChevronRight color="white" size={20} />
+              <TouchableOpacity onPress={processMetrics} style={{ flex: 1 }}>
+                <LinearGradient colors={[Accent.primary, Accent.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={primaryBtnStyle}>
+                  <Text style={{ color: '#FFF', fontFamily: 'Outfit_600SemiBold', fontSize: 15 }}>Lanjut</Text>
+                  <ChevronRight color="white" size={18} />
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </Animated.View>
         )}
 
+        {/* ══════════ STEP 3: BMI Check ══════════ */}
         {step === 3 && bmiDetails && (
-          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} className="flex-1 justify-center">
-            <View className="mb-6">
-              <Text className={`text-3xl font-black ${textClass} tracking-tight`}>Pemeriksaan BMI</Text>
-              <Text className={`text-base mt-2 ${textMutedClass}`}>
-                Hasil hitung komposisi tubuh otomatis.
-              </Text>
+          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Pemeriksaan BMI</Text>
+              <Text style={{ fontSize: 14, fontFamily: 'Outfit_500Medium', color: c.textSub, marginTop: 8 }}>Hasil hitung komposisi tubuh otomatis.</Text>
             </View>
 
-            <View className={`p-6 rounded-2xl border-2 mb-6 ${cardClass}`}>
-              <View className="items-center py-4 border-b border-neutral-800/10 mb-4">
-                <Text className={`text-sm uppercase tracking-wider ${textMutedClass}`}>BMI Anda</Text>
-                <Text className={`text-5xl font-black mt-1 ${textClass}`}>{bmiDetails.bmi}</Text>
-                <Text className={`text-lg font-bold mt-2 ${
-                  bmiDetails.bmi < 18.5 || bmiDetails.bmi >= 25 ? 'text-amber-500' : 'text-green-500'
-                }`}>
+            {/* BMI Card */}
+            <View style={{
+              padding: 24,
+              borderRadius: 18,
+              borderWidth: 2,
+              borderColor: c.border,
+              backgroundColor: c.surface,
+              marginBottom: 16,
+            }}>
+              <View style={{
+                alignItems: 'center',
+                paddingVertical: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: c.border,
+                marginBottom: 16,
+              }}>
+                <Text style={{
+                  fontSize: 10,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: c.textMuted,
+                  letterSpacing: 1,
+                  textTransform: 'uppercase',
+                  marginBottom: 4,
+                }}>
+                  BMI Anda
+                </Text>
+                <Text style={{
+                  fontSize: 52,
+                  fontFamily: 'Outfit_800ExtraBold',
+                  color: c.text,
+                  letterSpacing: -1.5,
+                }}>
+                  {bmiDetails.bmi}
+                </Text>
+                <Text style={{
+                  fontSize: 16,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: bmiDetails.bmi < 18.5 || bmiDetails.bmi >= 25 ? '#F59E0B' : '#22C55E',
+                  marginTop: 4,
+                }}>
                   Kategori: {bmiDetails.category}
                 </Text>
               </View>
 
-              <View className="space-y-3">
-                <View className="flex-row justify-between">
-                  <Text className={textMutedClass}>Total Kebutuhan Harian (TDEE)</Text>
-                  <Text className={`font-bold ${textClass}`}>{bmiDetails.tdee} kcal</Text>
+              <View style={{ gap: 10 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 13, fontFamily: 'Outfit_500Medium', color: c.textSub }}>TDEE Harian</Text>
+                  <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text }}>{bmiDetails.tdee} kcal</Text>
                 </View>
-                <View className="flex-row justify-between">
-                  <Text className={textMutedClass}>Rekomendasi Target Kalori</Text>
-                  <Text className={`font-bold ${textClass}`}>{bmiDetails.targetCalories} kcal</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 13, fontFamily: 'Outfit_500Medium', color: c.textSub }}>Target Kalori</Text>
+                  <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text }}>{bmiDetails.targetCalories} kcal</Text>
                 </View>
               </View>
             </View>
 
-            {/* Warning compatibility section */}
+            {/* Warning or Success */}
             {!bmiDetails.isCompatible ? (
-              <View className="p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 mb-6">
-                <Text className="text-amber-500 font-bold text-lg mb-2">⚠️ Goal Kurang Sesuai</Text>
-                <Text className={`text-sm ${isDark ? 'text-amber-200/80' : 'text-amber-800/80'} leading-relaxed`}>
+              <View style={{
+                padding: 20,
+                borderRadius: 18,
+                backgroundColor: 'rgba(245,158,11,0.12)',
+                borderWidth: 2,
+                borderColor: 'rgba(245,158,11,0.3)',
+                marginBottom: 16,
+              }}>
+                <Text style={{ fontSize: 15, fontFamily: 'Outfit_600SemiBold', color: '#F59E0B', marginBottom: 6 }}>⚠️ Goal Kurang Sesuai</Text>
+                <Text style={{ fontSize: 13, fontFamily: 'Outfit_500Medium', color: isDark ? 'rgba(253,224,71,0.8)' : 'rgba(146,64,14,0.8)', lineHeight: 20 }}>
                   {bmiDetails.warningMsg}
                 </Text>
               </View>
             ) : (
-              <View className="p-5 rounded-2xl bg-green-500/10 border-2 border-green-500/30 mb-6">
-                <Text className="text-green-500 font-bold text-lg mb-2">✅ Goal Sesuai</Text>
-                <Text className={`text-sm ${isDark ? 'text-green-200/80' : 'text-green-800/80'} leading-relaxed`}>
+              <View style={{
+                padding: 20,
+                borderRadius: 18,
+                backgroundColor: 'rgba(34,197,94,0.12)',
+                borderWidth: 2,
+                borderColor: 'rgba(34,197,94,0.3)',
+                marginBottom: 16,
+              }}>
+                <Text style={{ fontSize: 15, fontFamily: 'Outfit_600SemiBold', color: '#22C55E', marginBottom: 6 }}>✅ Goal Sesuai</Text>
+                <Text style={{ fontSize: 13, fontFamily: 'Outfit_500Medium', color: isDark ? 'rgba(134,239,172,0.8)' : 'rgba(22,101,52,0.8)', lineHeight: 20 }}>
                   Goal kamu ({goal}) sangat sesuai dengan kategori BMI tubuhmu saat ini. Mari lanjutkan!
                 </Text>
               </View>
             )}
 
-            {/* Navigation buttons */}
-            <View className="flex-row space-x-4">
+            {/* Navigation */}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
               {!bmiDetails.isCompatible ? (
                 <>
-                  <TouchableOpacity
-                    onPress={() => setStep(1)}
-                    className="flex-1 py-4 rounded-xl border-2 items-center justify-center bg-neutral-900 border-neutral-800"
-                  >
-                    <Text className="text-white font-bold text-base">Ubah Goal</Text>
+                  <TouchableOpacity onPress={() => setStep(1)} style={secondaryBtnStyle}>
+                    <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 15, color: c.text }}>Ubah Goal</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleConfirmGoal}
-                    className="flex-1 py-4 rounded-xl items-center justify-center bg-amber-500"
-                  >
-                    <Text className="text-black font-bold text-base">Tetap Lanjut</Text>
+                  <TouchableOpacity onPress={handleConfirmGoal} style={{
+                    flex: 1,
+                    paddingVertical: 16,
+                    borderRadius: 14,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#F59E0B',
+                  }}>
+                    <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 15, color: '#000' }}>Tetap Lanjut</Text>
                   </TouchableOpacity>
                 </>
               ) : (
                 <>
-                  <TouchableOpacity
-                    onPress={() => setStep(2)}
-                    className={`flex-1 py-4 rounded-xl border-2 flex-row items-center justify-center space-x-2 ${
-                      isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                    }`}
-                  >
-                    <ChevronLeft color={isDark ? '#FFF' : '#334155'} size={20} />
-                    <Text className={`font-bold text-base ${textClass}`}>Ubah Data</Text>
+                  <TouchableOpacity onPress={() => setStep(2)} style={secondaryBtnStyle}>
+                    <ChevronLeft color={c.text} size={18} />
+                    <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 15, color: c.text }}>Ubah Data</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleConfirmGoal}
-                    className="flex-1 py-4 rounded-xl flex-row items-center justify-center space-x-2"
-                    style={{ backgroundColor: accentColor }}
-                  >
-                    <Text className="text-white font-bold text-base">Lanjut</Text>
-                    <ChevronRight color="white" size={20} />
+                  <TouchableOpacity onPress={handleConfirmGoal} style={{ flex: 1 }}>
+                    <LinearGradient colors={[Accent.primary, Accent.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={primaryBtnStyle}>
+                      <Text style={{ color: '#FFF', fontFamily: 'Outfit_600SemiBold', fontSize: 15 }}>Lanjut</Text>
+                      <ChevronRight color="white" size={18} />
+                    </LinearGradient>
                   </TouchableOpacity>
                 </>
               )}
@@ -466,59 +520,71 @@ export default function OnboardingScreen() {
           </Animated.View>
         )}
 
+        {/* ══════════ STEP 5: Target Weight ══════════ */}
         {step === 5 && bmiDetails && (
-          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} className="flex-1 justify-center">
-            <View className="mb-6">
-              <Text className={`text-3xl font-black ${textClass} tracking-tight`}>Target Berat Badan</Text>
-              <Text className={`text-base mt-2 ${textMutedClass}`}>
-                Tentukan berat badan yang ingin kamu capai.
-              </Text>
+          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Target Berat Badan</Text>
+              <Text style={{ fontSize: 14, fontFamily: 'Outfit_500Medium', color: c.textSub, marginTop: 8 }}>Tentukan berat badan yang ingin kamu capai.</Text>
             </View>
 
-            <View className="space-y-4">
+            <View style={{ gap: 16 }}>
               <View>
-                <Text className={`text-sm font-semibold mb-2 ${textClass}`}>Berat Target (kg)</Text>
+                <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text, marginBottom: 6 }}>Berat Target (kg)</Text>
                 <TextInput
                   placeholder={`Contoh: ${goal === 'cutting' ? '65' : '75'}`}
-                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                  placeholderTextColor={c.textMuted}
                   keyboardType="numeric"
                   value={weightTarget}
                   onChangeText={setWeightTarget}
-                  className={`px-4 py-3 rounded-xl border-2 ${inputClass}`}
+                  style={inputStyle}
                 />
               </View>
 
               {calculateEstimation() && (
-                <Animated.View entering={FadeIn} exiting={FadeOut} className={`p-5 rounded-2xl border-2 ${cardClass}`}>
-                  <Text className={`text-sm ${textMutedClass}`}>Estimasi Waktu Realistis</Text>
-                  <Text className={`text-xl font-extrabold mt-1 ${isDark ? 'text-orange-500' : 'text-blue-600'}`}>
-                    {calculateEstimation()?.weeks} Minggu
-                  </Text>
-                  <Text className={`text-xs mt-2 ${textMutedClass} leading-relaxed`}>
-                    Dihitung berdasarkan target kalori harian {bmiDetails.targetCalories} kcal dengan deficit/surplus harian asupan.
-                  </Text>
+                <Animated.View entering={FadeIn} exiting={FadeOut}>
+                  <View style={{
+                    padding: 20,
+                    borderRadius: 18,
+                    borderWidth: 2,
+                    borderColor: c.border,
+                    backgroundColor: c.surface,
+                  }}>
+                    <Text style={{ fontSize: 12, fontFamily: 'Outfit_500Medium', color: c.textSub }}>Estimasi Waktu Realistis</Text>
+                    <Text style={{
+                      fontSize: 24,
+                      fontFamily: 'Outfit_800ExtraBold',
+                      color: Accent.primary,
+                      marginTop: 4,
+                      letterSpacing: -0.5,
+                    }}>
+                      {calculateEstimation()?.weeks} Minggu
+                    </Text>
+                    <Text style={{
+                      fontSize: 11,
+                      fontFamily: 'Outfit_500Medium',
+                      color: c.textMuted,
+                      marginTop: 6,
+                      lineHeight: 18,
+                    }}>
+                      Dihitung berdasarkan target kalori harian {bmiDetails.targetCalories} kcal.
+                    </Text>
+                  </View>
                 </Animated.View>
               )}
             </View>
 
-            {/* Navigation buttons */}
-            <View className="flex-row space-x-4 mt-8">
-              <TouchableOpacity
-                onPress={() => setStep(3)}
-                className={`flex-1 py-4 rounded-xl border-2 flex-row items-center justify-center space-x-2 ${
-                  isDark ? 'border-neutral-800 bg-neutral-950' : 'border-slate-200 bg-white'
-                }`}
-              >
-                <ChevronLeft color={isDark ? '#FFF' : '#334155'} size={20} />
-                <Text className={`font-bold text-base ${textClass}`}>Kembali</Text>
+            {/* Navigation */}
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 24 }}>
+              <TouchableOpacity onPress={() => setStep(3)} style={secondaryBtnStyle}>
+                <ChevronLeft color={c.text} size={18} />
+                <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 15, color: c.text }}>Kembali</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleFinishOnboarding}
-                className="flex-1 py-4 rounded-xl flex-row items-center justify-center space-x-2"
-                style={{ backgroundColor: accentColor }}
-              >
-                <Text className="text-white font-bold text-base">Selesai</Text>
-                <ArrowRight color="white" size={20} />
+              <TouchableOpacity onPress={handleFinishOnboarding} style={{ flex: 1 }}>
+                <LinearGradient colors={[Accent.primary, Accent.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={primaryBtnStyle}>
+                  <Text style={{ color: '#FFF', fontFamily: 'Outfit_600SemiBold', fontSize: 15 }}>Selesai</Text>
+                  <ArrowRight color="white" size={18} />
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </Animated.View>

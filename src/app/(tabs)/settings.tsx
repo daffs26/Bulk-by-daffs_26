@@ -1,20 +1,15 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
 import { useAppState } from '@/hooks/useAppState';
-import { User, Sun, Moon, RefreshCw, Award, Activity, Scale, Info } from 'lucide-react-native';
+import { Colors, Accent } from '@/constants/theme';
+import { User, Sun, Moon, RefreshCw, Activity, Scale, Info } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function SettingsScreen() {
   const { userProfile, theme, toggleTheme, resetAllData } = useAppState();
-
+  const c = Colors[theme];
   const isDark = theme === 'dark';
-
-  // Theme styling
-  const bgClass = isDark ? 'bg-dark-bg' : 'bg-light-bg';
-  const textClass = isDark ? 'text-white' : 'text-slate-900';
-  const textMutedClass = isDark ? 'text-gray-400' : 'text-slate-500';
-  const cardClass = isDark ? 'bg-dark-card border-neutral-900' : 'bg-white border-slate-100 shadow-sm';
-  const accentColor = isDark ? '#F97316' : '#2563EB';
 
   const handleReset = () => {
     Alert.alert(
@@ -22,7 +17,7 @@ export default function SettingsScreen() {
       'Apakah Anda yakin ingin menghapus seluruh log data dan mengulang kembali onboarding?',
       [
         { text: 'Batal', style: 'cancel' },
-        { text: 'Hapus Semua', style: 'destructive', onPress: resetAllData }
+        { text: 'Hapus Semua', style: 'destructive', onPress: resetAllData },
       ]
     );
   };
@@ -35,119 +30,260 @@ export default function SettingsScreen() {
     }
   };
 
-  const getActivityLabel = (activity: string) => {
-    switch (activity) {
-      case 'sedentary': return 'Sedentary (Jarang olahraga)';
-      case 'light': return 'Lightly Active (1-3x / minggu)';
-      case 'active': return 'Active (3-5x / minggu)';
-      default: return 'Very Active (Fisik berat)';
-    }
-  };
-
   return (
-    <SafeAreaView className={`flex-1 ${bgClass}`}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} className="px-6 pt-6">
-        
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+
         {/* Header */}
-        <View className="mb-6">
-          <Text className={`text-2xl font-black ${textClass}`}>Profil & Pengaturan</Text>
-          <Text className={`text-xs mt-1 ${textMutedClass}`}>Kelola data fisik dan pengaturan tema</Text>
+        <View style={{ marginBottom: 24 }}>
+          <Text style={{
+            fontSize: 22,
+            fontFamily: 'Outfit_800ExtraBold',
+            color: c.text,
+            letterSpacing: -0.3,
+          }}>
+            Profil & <Text style={{ color: Accent.primary }}>Pengaturan</Text>
+          </Text>
+          <Text style={{
+            fontSize: 12,
+            fontFamily: 'Outfit_500Medium',
+            color: c.textMuted,
+            marginTop: 4,
+            letterSpacing: 0.2,
+          }}>
+            Kelola data fisik dan pengaturan tema
+          </Text>
         </View>
 
-        {/* Theme Toggler Card */}
-        <Animated.View entering={FadeInDown.duration(400)} className={`p-5 rounded-3xl border flex-row justify-between items-center ${cardClass} mb-6`}>
-          <View className="flex-row items-center space-x-3">
-            {isDark ? <Moon color={accentColor} size={22} /> : <Sun color={accentColor} size={22} />}
-            <View>
-              <Text className={`text-sm font-bold ${textClass}`}>Mode Tampilan</Text>
-              <Text className={`text-xs ${textMutedClass}`}>Ganti tema terang atau gelap</Text>
+        {/* ── Theme Toggler ── */}
+        <Animated.View entering={FadeInDown.duration(400)}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: 20,
+            borderRadius: 24,
+            backgroundColor: c.surface,
+            borderWidth: 1,
+            borderColor: c.border,
+            marginBottom: 16,
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              {isDark ? <Moon color={Accent.primary} size={20} /> : <Sun color={Accent.primary} size={20} />}
+              <View>
+                <Text style={{
+                  fontSize: 14,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: c.text,
+                  letterSpacing: -0.1,
+                }}>
+                  Mode Tampilan
+                </Text>
+                <Text style={{
+                  fontSize: 11,
+                  fontFamily: 'Outfit_500Medium',
+                  color: c.textMuted,
+                  marginTop: 2,
+                }}>
+                  Ganti tema terang atau gelap
+                </Text>
+              </View>
             </View>
+
+            <TouchableOpacity
+              onPress={toggleTheme}
+              style={{
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 10,
+                backgroundColor: c.surface2,
+                borderWidth: 1,
+                borderColor: c.border,
+              }}
+            >
+              <Text style={{
+                fontSize: 12,
+                fontFamily: 'Outfit_600SemiBold',
+                color: c.text,
+              }}>
+                {isDark ? 'Gelap' : 'Terang'}
+              </Text>
+            </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity 
-            onPress={toggleTheme}
-            className={`px-4 py-2.5 rounded-xl border-2 flex-row items-center space-x-1.5 ${
-              isDark ? 'border-neutral-800 bg-neutral-900' : 'border-slate-200 bg-slate-50'
-            }`}
-          >
-            <Text className={`text-xs font-bold ${textClass}`}>{isDark ? 'Tema Gelap' : 'Tema Terang'}</Text>
-          </TouchableOpacity>
         </Animated.View>
 
-        {/* User Physical Details Profile Card */}
+        {/* ── Profile Card ── */}
         {userProfile && (
-          <Animated.View entering={FadeInDown.duration(450)} className={`p-6 rounded-3xl border ${cardClass} mb-6`}>
-            <View className="flex-row items-center space-x-3 border-b border-neutral-800/10 pb-4 mb-4">
-              <View className="w-10 h-10 rounded-full items-center justify-center bg-orange-500/15">
-                <User color={accentColor} size={20} />
-              </View>
-              <View>
-                <Text className={`text-base font-black ${textClass}`}>Status Target Fisik</Text>
-                <Text className={`text-xs ${textMutedClass}`}>{getGoalLabel(userProfile.goal)}</Text>
-              </View>
-            </View>
-
-            <View className="space-y-4">
-              <View className="flex-row justify-between">
-                <View className="flex-row items-center space-x-2">
-                  <User color={isDark ? '#6B7280' : '#9CA3AF'} size={16} />
-                  <Text className={`text-xs ${textMutedClass}`}>Gender & Usia</Text>
+          <Animated.View entering={FadeInDown.duration(450)}>
+            <View style={{
+              borderRadius: 24,
+              backgroundColor: c.surface,
+              borderWidth: 1,
+              borderColor: c.border,
+              padding: 24,
+              marginBottom: 16,
+            }}>
+              {/* Profile header */}
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                paddingBottom: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: c.border,
+                marginBottom: 16,
+              }}>
+                <LinearGradient
+                  colors={[Accent.primary, Accent.primaryDark]}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <User color="white" size={20} />
+                </LinearGradient>
+                <View>
+                  <Text style={{
+                    fontSize: 16,
+                    fontFamily: 'Outfit_800ExtraBold',
+                    color: c.text,
+                    letterSpacing: -0.2,
+                  }}>
+                    Status Target Fisik
+                  </Text>
+                  <Text style={{
+                    fontSize: 12,
+                    fontFamily: 'Outfit_500Medium',
+                    color: Accent.primary,
+                    marginTop: 2,
+                  }}>
+                    {getGoalLabel(userProfile.goal)}
+                  </Text>
                 </View>
-                <Text className={`text-xs font-bold ${textClass}`}>
-                  {userProfile.gender === 'male' ? 'Laki-laki' : 'Perempuan'}, {userProfile.age} Th
-                </Text>
               </View>
 
-              <View className="flex-row justify-between">
-                <View className="flex-row items-center space-x-2">
-                  <Scale color={isDark ? '#6B7280' : '#9CA3AF'} size={16} />
-                  <Text className={`text-xs ${textMutedClass}`}>Tinggi / Berat</Text>
+              {/* Data rows */}
+              <View style={{ gap: 14 }}>
+                <DataRow
+                  icon={<User size={14} color={c.textMuted} />}
+                  label="Gender & Usia"
+                  value={`${userProfile.gender === 'male' ? 'Laki-laki' : 'Perempuan'}, ${userProfile.age} Th`}
+                  c={c}
+                />
+                <DataRow
+                  icon={<Scale size={14} color={c.textMuted} />}
+                  label="Tinggi / Berat"
+                  value={`${userProfile.height} cm / ${userProfile.weightCurrent} kg (Target: ${userProfile.weightTarget} kg)`}
+                  c={c}
+                />
+                <DataRow
+                  icon={<Activity size={14} color={c.textMuted} />}
+                  label="Aktivitas"
+                  value={
+                    userProfile.activityLevel === 'sedentary' ? 'Ringan (Sedentary)'
+                    : userProfile.activityLevel === 'light' ? 'Lightly Active'
+                    : 'Active'
+                  }
+                  c={c}
+                />
+
+                {/* BMI & TDEE highlight */}
+                <View style={{
+                  paddingTop: 14,
+                  borderTopWidth: 1,
+                  borderTopColor: c.border,
+                  gap: 10,
+                }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.text }}>BMI (Indeks Massa Tubuh)</Text>
+                    <Text style={{ fontSize: 13, fontFamily: 'Outfit_800ExtraBold', color: Accent.primary, letterSpacing: -0.3 }}>{userProfile.bmi}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.text }}>TDEE (Daily Energy Target)</Text>
+                    <Text style={{ fontSize: 13, fontFamily: 'Outfit_800ExtraBold', color: Accent.primary, letterSpacing: -0.3 }}>{userProfile.tdee} kcal</Text>
+                  </View>
                 </View>
-                <Text className={`text-xs font-bold ${textClass}`}>
-                  {userProfile.height} cm / {userProfile.weightCurrent} kg (Target: {userProfile.weightTarget} kg)
-                </Text>
-              </View>
-
-              <View className="flex-row justify-between">
-                <View className="flex-row items-center space-x-2">
-                  <Activity color={isDark ? '#6B7280' : '#9CA3AF'} size={16} />
-                  <Text className={`text-xs ${textMutedClass}`}>Aktivitas</Text>
-                </View>
-                <Text className={`text-xs font-bold ${textClass}`}>
-                  {userProfile.activityLevel === 'sedentary' ? 'Ringan (Sedentary)' : userProfile.activityLevel === 'light' ? 'Lightly Active' : 'Active'}
-                </Text>
-              </View>
-
-              <View className="flex-row justify-between pt-3 border-t border-neutral-800/10">
-                <Text className={`text-xs font-semibold ${textClass}`}>BMI (Indeks Massa Tubuh)</Text>
-                <Text className={`text-xs font-black ${isDark ? 'text-orange-500' : 'text-blue-600'}`}>{userProfile.bmi}</Text>
-              </View>
-
-              <View className="flex-row justify-between">
-                <Text className={`text-xs font-semibold ${textClass}`}>TDEE (Daily Energy Target)</Text>
-                <Text className={`text-xs font-black ${isDark ? 'text-orange-500' : 'text-blue-600'}`}>{userProfile.tdee} kcal</Text>
               </View>
             </View>
           </Animated.View>
         )}
 
-        {/* Reset settings and debug */}
-        <Animated.View entering={FadeInDown.duration(500)} className="space-y-3">
+        {/* ── Danger Zone ── */}
+        <Animated.View entering={FadeInDown.duration(500)}>
           <TouchableOpacity
             onPress={handleReset}
-            className="w-full py-4 rounded-xl border border-transparent bg-red-500/10 flex-row items-center justify-center space-x-2"
+            style={{
+              width: '100%',
+              paddingVertical: 16,
+              borderRadius: 14,
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              borderWidth: 1,
+              borderColor: 'rgba(239, 68, 68, 0.2)',
+            }}
           >
-            <RefreshCw size={16} color="#EF4444" />
-            <Text className="text-red-500 font-bold text-sm">Hapus Semua & Ulang Onboarding</Text>
+            <RefreshCw size={14} color="#EF4444" />
+            <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: '#EF4444' }}>
+              Hapus Semua & Ulang Onboarding
+            </Text>
           </TouchableOpacity>
 
-          <View className="flex-row items-center justify-center space-x-1 mt-4">
-            <Info size={12} color={isDark ? '#4B5563' : '#9CA3AF'} />
-            <Text className={`text-[10px] ${textMutedClass}`}>BULK App v1.0.0 (by @daffs_26)</Text>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            marginTop: 16,
+          }}>
+            <Info size={10} color={c.textMuted} />
+            <Text style={{
+              fontSize: 10,
+              fontFamily: 'Outfit_500Medium',
+              color: c.textMuted,
+            }}>
+              BULK App v1.0.0 (by @daffs_26)
+            </Text>
           </View>
         </Animated.View>
 
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/* ── DataRow Component ── */
+function DataRow({
+  icon,
+  label,
+  value,
+  c,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  c: typeof Colors.dark;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {icon}
+        <Text style={{ fontSize: 12, fontFamily: 'Outfit_500Medium', color: c.textMuted }}>{label}</Text>
+      </View>
+      <Text style={{
+        fontSize: 12,
+        fontFamily: 'Outfit_600SemiBold',
+        color: c.text,
+        maxWidth: '55%',
+        textAlign: 'right',
+      }}>
+        {value}
+      </Text>
+    </View>
   );
 }

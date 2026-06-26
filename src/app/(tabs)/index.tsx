@@ -1,30 +1,113 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
 import { useAppState } from '@/hooks/useAppState';
-import { Flame, Droplet, Zap, Heart, FlameKindling, Plus } from 'lucide-react-native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring, 
-  FadeInDown 
+import { Colors, Accent } from '@/constants/theme';
+import { Flame, Droplet, FlameKindling, Plus, Zap } from 'lucide-react-native';
+import Svg, { Circle } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  FadeInDown,
 } from 'react-native-reanimated';
 
+/* ── Circular Macro Ring Component ── */
+function MacroRing({
+  label,
+  current,
+  target,
+  color,
+  textColor,
+}: {
+  label: string;
+  current: number;
+  target: number;
+  color: string;
+  textColor: string;
+}) {
+  const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
+  const r = 26;
+  const strokeWidth = 5;
+  const size = 72;
+  const circumference = 2 * Math.PI * r;
+  const dash = (pct / 100) * circumference;
+
+  return (
+    <View style={{ alignItems: 'center', gap: 6 }}>
+      <View style={{ width: size, height: size, position: 'relative' }}>
+        <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={strokeWidth}
+          />
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${dash} ${circumference - dash}`}
+            strokeLinecap="round"
+          />
+        </Svg>
+        <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+          <Text style={{
+            fontSize: 13,
+            fontFamily: 'Outfit_800ExtraBold',
+            color: textColor,
+            letterSpacing: -0.3,
+          }}>
+            {Math.round(pct)}%
+          </Text>
+        </View>
+      </View>
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{
+          fontSize: 14,
+          fontFamily: 'Outfit_800ExtraBold',
+          color: textColor,
+          letterSpacing: -0.3,
+        }}>
+          {current}g
+        </Text>
+        <Text style={{
+          fontSize: 10,
+          fontFamily: 'Outfit_600SemiBold',
+          color: 'rgba(255,255,255,0.4)',
+          letterSpacing: 0.6,
+          textTransform: 'uppercase',
+        }}>
+          {label}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export default function DashboardScreen() {
-  const { 
-    userProfile, 
-    foodLogs, 
-    waterLoggedMl, 
-    addWater, 
-    resetWater, 
-    streak, 
-    theme 
+  const {
+    userProfile,
+    foodLogs,
+    waterLoggedMl,
+    addWater,
+    resetWater,
+    streak,
+    theme,
   } = useAppState();
 
   const isDark = theme === 'dark';
+  const c = Colors[theme];
+
   const today = new Date().toISOString().split('T')[0];
 
   // Calculate calories and macros eaten today
-  const todayFoods = foodLogs.filter(f => f.date === today);
+  const todayFoods = foodLogs.filter((f) => f.date === today);
   const caloriesEaten = todayFoods.reduce((acc, f) => acc + f.calories, 0);
   const proteinEaten = todayFoods.reduce((acc, f) => acc + f.protein, 0);
   const carbsEaten = todayFoods.reduce((acc, f) => acc + f.carbs, 0);
@@ -37,26 +120,15 @@ export default function DashboardScreen() {
 
   const waterGoal = userProfile ? Math.round(userProfile.weightCurrent * 0.033 * 1000) : 2000;
 
-  // Remaining calories
   const caloriesRemaining = Math.max(0, targetCalories - caloriesEaten);
   const caloriePercent = Math.min(1, caloriesEaten / targetCalories);
+  const waterPercent = Math.min(1, waterLoggedMl / waterGoal);
 
-  // Theme styles
-  const bgClass = isDark ? 'bg-dark-bg' : 'bg-light-bg';
-  const textClass = isDark ? 'text-white' : 'text-slate-900';
-  const textMutedClass = isDark ? 'text-gray-400' : 'text-slate-500';
-  const cardClass = isDark ? 'bg-dark-card border-neutral-900' : 'bg-white border-slate-100 shadow-sm';
-  const progressBgClass = isDark ? 'bg-neutral-800' : 'bg-slate-200';
-  const headerAccentColor = isDark ? 'text-orange-500' : 'text-blue-600';
-  
-  // Reanimated Shared Values for dynamic progress styling
+  // Water animation
   const waterAnimScale = useSharedValue(1);
-
-  const animatedWaterStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: waterAnimScale.value }],
-    };
-  });
+  const animatedWaterStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: waterAnimScale.value }],
+  }));
 
   const handleAddWater = (ml: number) => {
     addWater(ml);
@@ -65,165 +137,348 @@ export default function DashboardScreen() {
   };
 
   return (
-    <SafeAreaView className={`flex-1 ${bgClass}`}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} className="px-6 pt-6">
-        
-        {/* Top Header */}
-        <View className="flex-row justify-between items-center mb-6">
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+
+        {/* ── Header ── */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <View>
-            <Text className={`text-xs uppercase tracking-widest ${textMutedClass}`}>Welcome Back</Text>
-            <Text className={`text-2xl font-black ${textClass}`}>BULK Dashboard</Text>
+            <Text style={{
+              fontSize: 10,
+              fontFamily: 'Outfit_600SemiBold',
+              color: c.textMuted,
+              letterSpacing: 0.8,
+              textTransform: 'uppercase',
+              marginBottom: 4,
+            }}>
+              Welcome Back
+            </Text>
+            <Text style={{
+              fontSize: 22,
+              fontFamily: 'Outfit_800ExtraBold',
+              color: c.text,
+              letterSpacing: -0.3,
+            }}>
+              BULK <Text style={{ color: Accent.primary }}>Dashboard</Text>
+            </Text>
           </View>
-          <View className={`px-3 py-1.5 rounded-full border flex-row items-center space-x-1 ${cardClass}`}>
-            <FlameKindling size={16} color={isDark ? '#F97316' : '#2563EB'} />
-            <Text className={`text-xs font-bold ${textClass}`}>{streak} Days Streak</Text>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 5,
+            backgroundColor: Accent.pale,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 999,
+          }}>
+            <FlameKindling size={14} color={Accent.primary} />
+            <Text style={{
+              fontSize: 12,
+              fontFamily: 'Outfit_800ExtraBold',
+              color: Accent.primary,
+              letterSpacing: -0.2,
+            }}>
+              {streak} Days
+            </Text>
           </View>
         </View>
 
-        {/* Calorie Progress Ring / Card */}
-        <Animated.View entering={FadeInDown.duration(400)} className={`p-6 rounded-3xl border ${cardClass} mb-6`}>
-          <View className="flex-row justify-between items-center mb-4">
-            <View>
-              <Text className={`text-sm font-semibold ${textMutedClass}`}>Energy Balance</Text>
-              <Text className={`text-3xl font-extrabold mt-1 ${textClass}`}>
-                {caloriesEaten} <Text className="text-sm font-normal">/ {targetCalories} kcal</Text>
+        {/* ── Calorie Hero Card (Gradient Orange) ── */}
+        <Animated.View entering={FadeInDown.duration(400)}>
+          <LinearGradient
+            colors={[Accent.primary, Accent.primaryDark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 24,
+              padding: 24,
+              marginBottom: 16,
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View>
+                <Text style={{
+                  fontSize: 10,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: 'rgba(255,255,255,0.7)',
+                  letterSpacing: 0.8,
+                  textTransform: 'uppercase',
+                  marginBottom: 8,
+                }}>
+                  Energy Balance
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+                  <Text style={{
+                    fontSize: 52,
+                    fontFamily: 'Outfit_800ExtraBold',
+                    color: '#FFFFFF',
+                    lineHeight: 56,
+                    letterSpacing: -1.5,
+                  }}>
+                    {caloriesEaten}
+                  </Text>
+                  <Text style={{
+                    fontSize: 15,
+                    fontFamily: 'Outfit_500Medium',
+                    color: 'rgba(255,255,255,0.75)',
+                  }}>
+                    / {targetCalories} kcal
+                  </Text>
+                </View>
+              </View>
+              <View style={{ opacity: 0.75 }}>
+                <Flame color="white" size={48} />
+              </View>
+            </View>
+
+            {/* Progress bar */}
+            <View style={{
+              height: 6,
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              borderRadius: 999,
+              marginTop: 20,
+              overflow: 'hidden',
+            }}>
+              <View style={{
+                height: '100%',
+                width: `${caloriePercent * 100}%`,
+                backgroundColor: '#FFFFFF',
+                borderRadius: 999,
+              }} />
+            </View>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+              <Text style={{
+                fontSize: 12,
+                fontFamily: 'Outfit_500Medium',
+                color: 'rgba(255,255,255,0.6)',
+              }}>
+                Target: {targetCalories} kcal
+              </Text>
+              <Text style={{
+                fontSize: 12,
+                fontFamily: 'Outfit_800ExtraBold',
+                color: '#FFFFFF',
+              }}>
+                Remaining: {caloriesRemaining} kcal
               </Text>
             </View>
-            <Flame color={isDark ? '#F97316' : '#2563EB'} size={32} />
-          </View>
+          </LinearGradient>
+        </Animated.View>
 
-          {/* Simple Clean Progress Bar */}
-          <View className={`h-3 w-full rounded-full ${progressBgClass} mb-4 overflow-hidden`}>
-            <View 
-              style={{ width: `${caloriePercent * 100}%` }} 
-              className={`h-full rounded-full ${isDark ? 'bg-orange-500' : 'bg-blue-600'}`} 
-            />
-          </View>
+        {/* ── Macro Rings Card ── */}
+        <Animated.View entering={FadeInDown.duration(450)}>
+          <View style={{
+            backgroundColor: c.surface,
+            borderColor: c.border,
+            borderWidth: 1,
+            borderRadius: 24,
+            padding: 24,
+            marginBottom: 16,
+          }}>
+            <Text style={{
+              fontSize: 13,
+              fontFamily: 'Outfit_600SemiBold',
+              color: c.text,
+              letterSpacing: 0.2,
+              marginBottom: 20,
+            }}>
+              Nutrients Distribution
+            </Text>
 
-          <View className="flex-row justify-between">
-            <View>
-              <Text className={`text-xs ${textMutedClass}`}>Target</Text>
-              <Text className={`text-sm font-semibold ${textClass}`}>{targetCalories} kcal</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              <MacroRing
+                label="Protein"
+                current={proteinEaten}
+                target={targetProtein}
+                color={Accent.primary}
+                textColor={c.text}
+              />
+              <MacroRing
+                label="Carbs"
+                current={carbsEaten}
+                target={targetCarbs}
+                color="#3B82F6"
+                textColor={c.text}
+              />
+              <MacroRing
+                label="Fat"
+                current={fatEaten}
+                target={targetFat}
+                color="#F59E0B"
+                textColor={c.text}
+              />
             </View>
-            <View className="items-end">
-              <Text className={`text-xs ${textMutedClass}`}>Remaining</Text>
-              <Text className={`text-sm font-semibold ${isDark ? 'text-orange-500' : 'text-blue-600'}`}>
-                {caloriesRemaining} kcal
+          </View>
+        </Animated.View>
+
+        {/* ── Water Tracker ── */}
+        <Animated.View entering={FadeInDown.duration(500)}>
+          <View style={{
+            backgroundColor: c.surface,
+            borderColor: c.border,
+            borderWidth: 1,
+            borderRadius: 24,
+            padding: 24,
+            marginBottom: 16,
+          }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <View>
+                <Text style={{
+                  fontSize: 10,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: c.textMuted,
+                  letterSpacing: 0.8,
+                  textTransform: 'uppercase',
+                  marginBottom: 4,
+                }}>
+                  Water Intake
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+                  <Text style={{
+                    fontSize: 28,
+                    fontFamily: 'Outfit_800ExtraBold',
+                    color: c.text,
+                    letterSpacing: -0.8,
+                  }}>
+                    {waterLoggedMl}
+                  </Text>
+                  <Text style={{
+                    fontSize: 13,
+                    fontFamily: 'Outfit_500Medium',
+                    color: c.textSub,
+                  }}>
+                    / {waterGoal} ml
+                  </Text>
+                </View>
+              </View>
+              <Animated.View style={animatedWaterStyle}>
+                <Droplet color={Accent.primary} size={32} />
+              </Animated.View>
+            </View>
+
+            {/* Water progress */}
+            <View style={{
+              height: 6,
+              backgroundColor: c.surface3,
+              borderRadius: 999,
+              marginBottom: 16,
+              overflow: 'hidden',
+            }}>
+              <View style={{
+                height: '100%',
+                width: `${waterPercent * 100}%`,
+                backgroundColor: Accent.primary,
+                borderRadius: 999,
+              }} />
+            </View>
+
+            {/* Water buttons */}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => handleAddWater(250)}
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  paddingVertical: 12,
+                  borderRadius: 14,
+                  backgroundColor: c.surface2,
+                  borderWidth: 1,
+                  borderColor: c.border,
+                }}
+              >
+                <Plus size={14} color={c.text} />
+                <Text style={{
+                  fontSize: 12,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: c.text,
+                }}>
+                  +250ml
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => handleAddWater(500)}
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  paddingVertical: 12,
+                  borderRadius: 14,
+                  backgroundColor: c.surface2,
+                  borderWidth: 1,
+                  borderColor: c.border,
+                }}
+              >
+                <Plus size={14} color={c.text} />
+                <Text style={{
+                  fontSize: 12,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: c.text,
+                }}>
+                  +500ml
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={resetWater}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                }}
+              >
+                <Text style={{
+                  fontSize: 12,
+                  fontFamily: 'Outfit_600SemiBold',
+                  color: '#EF4444',
+                }}>
+                  Reset
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* ── Daily Lifestyle Tip ── */}
+        <Animated.View entering={FadeInDown.duration(550)}>
+          <View style={{
+            borderRadius: 24,
+            padding: 20,
+            backgroundColor: Accent.pale,
+            borderWidth: 1,
+            borderColor: Accent.glow,
+            borderLeftWidth: 4,
+            borderLeftColor: Accent.primary,
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <Zap size={14} color={Accent.primary} />
+              <Text style={{
+                fontSize: 13,
+                fontFamily: 'Outfit_600SemiBold',
+                color: Accent.primary,
+                letterSpacing: 0.2,
+              }}>
+                Daily Lifestyle Tip
               </Text>
             </View>
+            <Text style={{
+              fontSize: 12,
+              fontFamily: 'Outfit_500Medium',
+              color: isDark ? 'rgba(255, 140, 51, 0.7)' : 'rgba(224, 92, 0, 0.8)',
+              lineHeight: 20,
+            }}>
+              Untuk memaksimalkan goal {userProfile?.goal.toUpperCase() || 'MAINTENANCE'} kamu, pastikan tidur 7-8 jam malam ini dan pertahankan asupan air minum harianmu.
+            </Text>
           </View>
         </Animated.View>
 
-        {/* Macros Breakdown */}
-        <Animated.View entering={FadeInDown.duration(450)} className={`p-6 rounded-3xl border ${cardClass} mb-6`}>
-          <Text className={`text-sm font-bold ${textClass} mb-4`}>Nutrients Distribution</Text>
-
-          <View className="space-y-4">
-            {/* Protein */}
-            <View>
-              <View className="flex-row justify-between mb-1.5">
-                <Text className={`text-xs font-semibold ${textClass}`}>Protein</Text>
-                <Text className={`text-xs ${textMutedClass}`}>{proteinEaten}g / {targetProtein}g</Text>
-              </View>
-              <View className={`h-2 w-full rounded-full ${progressBgClass} overflow-hidden`}>
-                <View 
-                  style={{ width: `${Math.min(1, proteinEaten / targetProtein) * 100}%` }} 
-                  className={`h-full rounded-full ${isDark ? 'bg-orange-500' : 'bg-blue-600'}`} 
-                />
-              </View>
-            </View>
-
-            {/* Carbs */}
-            <View>
-              <View className="flex-row justify-between mb-1.5">
-                <Text className={`text-xs font-semibold ${textClass}`}>Carbs</Text>
-                <Text className={`text-xs ${textMutedClass}`}>{carbsEaten}g / {targetCarbs}g</Text>
-              </View>
-              <View className={`h-2 w-full rounded-full ${progressBgClass} overflow-hidden`}>
-                <View 
-                  style={{ width: `${Math.min(1, carbsEaten / targetCarbs) * 100}%` }} 
-                  className={`h-full rounded-full ${isDark ? 'bg-orange-600' : 'bg-cyan-500'}`} 
-                />
-              </View>
-            </View>
-
-            {/* Fat */}
-            <View>
-              <View className="flex-row justify-between mb-1.5">
-                <Text className={`text-xs font-semibold ${textClass}`}>Fat</Text>
-                <Text className={`text-xs ${textMutedClass}`}>{fatEaten}g / {targetFat}g</Text>
-              </View>
-              <View className={`h-2 w-full rounded-full ${progressBgClass} overflow-hidden`}>
-                <View 
-                  style={{ width: `${Math.min(1, fatEaten / targetFat) * 100}%` }} 
-                  className={`h-full rounded-full ${isDark ? 'bg-neutral-600' : 'bg-slate-400'}`} 
-                />
-              </View>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Dynamic Water Tracker */}
-        <Animated.View entering={FadeInDown.duration(500)} className={`p-6 rounded-3xl border ${cardClass} mb-6`}>
-          <View className="flex-row justify-between items-center mb-4">
-            <View>
-              <Text className={`text-sm font-semibold ${textMutedClass}`}>Water Intake</Text>
-              <Text className={`text-2xl font-extrabold mt-1 ${textClass}`}>
-                {waterLoggedMl} <Text className="text-sm font-normal">/ {waterGoal} ml</Text>
-              </Text>
-            </View>
-            <Animated.View style={animatedWaterStyle}>
-              <Droplet color={isDark ? '#F97316' : '#2563EB'} size={32} />
-            </Animated.View>
-          </View>
-
-          <View className={`h-2.5 w-full rounded-full ${progressBgClass} mb-4 overflow-hidden`}>
-            <View 
-              style={{ width: `${Math.min(1, waterLoggedMl / waterGoal) * 100}%` }} 
-              className={`h-full rounded-full ${isDark ? 'bg-orange-500' : 'bg-blue-600'}`} 
-            />
-          </View>
-
-          <View className="flex-row space-x-3">
-            <TouchableOpacity 
-              onPress={() => handleAddWater(250)}
-              className={`flex-1 py-3 rounded-xl border-2 items-center flex-row justify-center space-x-1 ${
-                isDark ? 'border-neutral-800 bg-neutral-900' : 'border-slate-200 bg-slate-50'
-              }`}
-            >
-              <Plus size={16} color={isDark ? '#FFF' : '#334155'} />
-              <Text className={`text-xs font-bold ${textClass}`}>+250ml</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              onPress={() => handleAddWater(500)}
-              className={`flex-1 py-3 rounded-xl border-2 items-center flex-row justify-center space-x-1 ${
-                isDark ? 'border-neutral-800 bg-neutral-900' : 'border-slate-200 bg-slate-50'
-              }`}
-            >
-              <Plus size={16} color={isDark ? '#FFF' : '#334155'} />
-              <Text className={`text-xs font-bold ${textClass}`}>+500ml</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              onPress={resetWater}
-              className={`px-4 py-3 rounded-xl border-2 border-transparent bg-red-500/10 items-center justify-center`}
-            >
-              <Text className="text-red-500 text-xs font-bold">Reset</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Goals / Daily Tips Info */}
-        <Animated.View entering={FadeInDown.duration(550)} className={`p-5 rounded-3xl border bg-amber-500/5 ${
-          isDark ? 'border-amber-500/10' : 'border-amber-500/20'
-        }`}>
-          <Text className="text-amber-500 font-bold text-sm mb-1">💪 Daily Lifestyle Tip</Text>
-          <Text className={`text-xs leading-relaxed ${isDark ? 'text-amber-200/70' : 'text-amber-800/80'}`}>
-            Untuk memaksimalkan goal **{userProfile?.goal.toUpperCase() || 'MAINTENANCE'}** kamu, pastikan tidur 7-8 jam malam ini dan pertahankan asupan air minum harianmu.
-          </Text>
-        </Animated.View>
-        
       </ScrollView>
     </SafeAreaView>
   );

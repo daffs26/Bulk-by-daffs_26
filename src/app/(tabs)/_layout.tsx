@@ -2,71 +2,75 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { useAppState } from '@/hooks/useAppState';
 import { Home, Utensils, Camera, TrendingUp, User } from 'lucide-react-native';
+import { Colors, Accent } from '@/constants/theme';
 
 export default function TabLayout() {
   const { theme } = useAppState();
 
   const isDark = theme === 'dark';
-  const activeColor = isDark ? '#F97316' : '#2563EB'; // Orange vs Blue
-  const inactiveColor = isDark ? '#6B7280' : '#9CA3AF';
-  const tabBgColor = isDark ? '#141416' : '#FFFFFF';
-  const borderColor = isDark ? '#1E1F24' : '#E5E7EB';
+  const c = Colors[theme];
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: activeColor,
-        tabBarInactiveTintColor: inactiveColor,
+        tabBarActiveTintColor: Accent.primary,
+        tabBarInactiveTintColor: c.textMuted,
         tabBarStyle: {
-          backgroundColor: tabBgColor,
-          borderTopColor: borderColor,
+          backgroundColor: c.surface,
+          borderTopColor: c.border,
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 72,
+          paddingBottom: 12,
+          paddingTop: 10,
           elevation: 0,
           shadowOpacity: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontFamily: 'Outfit_600SemiBold',
+          fontSize: 10,
+          letterSpacing: 0.3,
+          textTransform: 'uppercase' as const,
+          marginTop: 2,
+        },
+        tabBarIconStyle: {
+          marginBottom: -2,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size - 2} />,
         }}
       />
       <Tabs.Screen
         name="food"
         options={{
           title: 'Diary',
-          tabBarIcon: ({ color, size }) => <Utensils color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Utensils color={color} size={size - 2} />,
         }}
       />
       <Tabs.Screen
         name="scan"
         options={{
           title: 'Scan',
-          tabBarIcon: ({ color, size }) => <Camera color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Camera color={color} size={size - 2} />,
         }}
       />
       <Tabs.Screen
         name="progress"
         options={{
           title: 'Charts',
-          tabBarIcon: ({ color, size }) => <TrendingUp color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <TrendingUp color={color} size={size - 2} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <User color={color} size={size - 2} />,
         }}
       />
     </Tabs>
