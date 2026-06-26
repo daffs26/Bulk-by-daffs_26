@@ -1,6 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'nativewind';
+import { auth, db, isConfigured } from '../config/firebase';
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  deleteDoc, 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy 
+} from 'firebase/firestore';
 
 export interface UserProfile {
   name: string;
@@ -137,31 +149,138 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Load state on mount
   useEffect(() => {
+    let unsubscribeAuth: () => void = () => {};
+
     const loadStoredData = async () => {
       try {
-        const storedProfile = await AsyncStorage.getItem('@bulk_user_profile');
-        const storedOnboarded = await AsyncStorage.getItem('@bulk_is_onboarded');
-        const storedFoods = await AsyncStorage.getItem('@bulk_food_logs');
-        const storedWeights = await AsyncStorage.getItem('@bulk_weight_logs');
-        const storedWater = await AsyncStorage.getItem('@bulk_water_logged');
-        const storedStreak = await AsyncStorage.getItem('@bulk_streak');
         const storedTheme = await AsyncStorage.getItem('@bulk_theme');
-
-        if (storedProfile) setUserProfile(JSON.parse(storedProfile));
-        if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
-        if (storedFoods) setFoodLogs(JSON.parse(storedFoods));
-        if (storedWeights) setWeightLogs(JSON.parse(storedWeights));
-        if (storedWater) setWaterLoggedMl(JSON.parse(storedWater));
-        if (storedStreak) setStreak(JSON.parse(storedStreak));
-        
         const initialTheme = (storedTheme as 'dark' | 'light') || 'dark';
         setTheme(initialTheme);
         setColorScheme(initialTheme);
+
+        if (!isConfigured) {
+          // Offline / Local fallback: Load everything from AsyncStorage
+          const storedProfile = await AsyncStorage.getItem('@bulk_user_profile');
+          const storedOnboarded = await AsyncStorage.getItem('@bulk_is_onboarded');
+          const storedFoods = await AsyncStorage.getItem('@bulk_food_logs');
+          const storedWeights = await AsyncStorage.getItem('@bulk_weight_logs');
+          const storedWater = await AsyncStorage.getItem('@bulk_water_logged');
+          const storedStreak = await AsyncStorage.getItem('@bulk_streak');
+
+          if (storedProfile) setUserProfile(JSON.parse(storedProfile));
+          if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
+          if (storedFoods) setFoodLogs(JSON.parse(storedFoods));
+          if (storedWeights) setWeightLogs(JSON.parse(storedWeights));
+          if (storedWater) setWaterLoggedMl(JSON.parse(storedWater));
+          if (storedStreak) setStreak(JSON.parse(storedStreak));
+          return;
+        }
+
+        // Firebase Sync mode
+        signInAnonymously(auth).catch((err) => {
+          console.error('Firebase Auth sign-in failed:', err);
+        });
+
+        unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            const uid = user.uid;
+
+            // 1. Fetch User Profile
+            const userDoc = await getDoc(doc(db, 'users', uid));
+            if (userDoc.exists()) {
+              const data = userDoc.data();
+              setUserProfile(data as UserProfile);
+              setIsOnboarded(true);
+              setStreak(data.streak || 0);
+              await AsyncStorage.setItem('@bulk_user_profile', JSON.stringify(data));
+              await AsyncStorage.setItem('@bulk_is_onboarded', JSON.stringify(true));
+              await AsyncStorage.setItem('@bulk_streak', JSON.stringify(data.streak || 0));
+            } else {
+              // Sync local profile to Firestore if exists
+              const localProfile = await AsyncStorage.getItem('@bulk_user_profile');
+              if (localProfile) {
+                const parsed = JSON.parse(localProfile);
+                setUserProfile(parsed);
+                setIsOnboarded(true);
+                await setDoc(doc(db, 'users', uid), { ...parsed, streak: 0 });
+              }
+            }
+
+            // 2. Fetch Food Logs
+            const foodQuery = query(collection(db, 'users', uid, 'food_logs'), orderBy('date', 'desc'));
+            const foodSnap = await getDocs(foodQuery);
+            const foods: FoodLog[] = [];
+            foodSnap.forEach((doc) => {
+              foods.push({ id: doc.id, ...doc.data() } as FoodLog);
+            });
+            if (foods.length > 0) {
+              setFoodLogs(foods);
+              await AsyncStorage.setItem('@bulk_food_logs', JSON.stringify(foods));
+            } else {
+              // Sync local food logs to Firestore if exists
+              const localFoods = await AsyncStorage.getItem('@bulk_food_logs');
+              if (localFoods) {
+                const parsed = JSON.parse(localFoods) as FoodLog[];
+                setFoodLogs(parsed);
+                for (const f of parsed) {
+                  await setDoc(doc(db, 'users', uid, 'food_logs', f.id), f);
+                }
+              }
+            }
+
+            // 3. Fetch Weight Logs
+            const weightQuery = query(collection(db, 'users', uid, 'weight_logs'), orderBy('date', 'desc'));
+            const weightSnap = await getDocs(weightQuery);
+            const weights: WeightLog[] = [];
+            weightSnap.forEach((doc) => {
+              weights.push({ id: doc.id, ...doc.data() } as WeightLog);
+            });
+            if (weights.length > 0) {
+              setWeightLogs(weights);
+              await AsyncStorage.setItem('@bulk_weight_logs', JSON.stringify(weights));
+            } else {
+              // Sync local weight logs to Firestore if exists
+              const localWeights = await AsyncStorage.getItem('@bulk_weight_logs');
+              if (localWeights) {
+                const parsed = JSON.parse(localWeights) as WeightLog[];
+                setWeightLogs(parsed);
+                for (const w of parsed) {
+                  await setDoc(doc(db, 'users', uid, 'weight_logs', w.id), w);
+                }
+              }
+            }
+
+            // 4. Fetch Today's Water Logged
+            const today = new Date().toISOString().split('T')[0];
+            const waterDoc = await getDoc(doc(db, 'users', uid, 'water_logs', today));
+            if (waterDoc.exists()) {
+              const ml = waterDoc.data().ml || 0;
+              setWaterLoggedMl(ml);
+              await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(ml));
+            } else {
+              // Check if we have a locally stored water log to push
+              const localWater = await AsyncStorage.getItem('@bulk_water_logged');
+              if (localWater) {
+                const ml = JSON.parse(localWater);
+                setWaterLoggedMl(ml);
+                await setDoc(doc(db, 'users', uid, 'water_logs', today), { ml, date: today });
+              } else {
+                setWaterLoggedMl(0);
+                await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(0));
+              }
+            }
+          }
+        });
       } catch (e) {
-        console.error('Failed to load storage', e);
+        console.error('Failed to load storage data', e);
       }
     };
+
     loadStoredData();
+
+    return () => {
+      if (unsubscribeAuth) unsubscribeAuth();
+    };
   }, []);
 
   const toggleTheme = async () => {
@@ -177,7 +296,6 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     await AsyncStorage.setItem('@bulk_user_profile', JSON.stringify(profile));
     await AsyncStorage.setItem('@bulk_is_onboarded', JSON.stringify(true));
     
-    // Seed initial weight log
     const today = new Date().toISOString().split('T')[0];
     const initialLog: WeightLog = {
       id: Math.random().toString(36).substr(2, 9),
@@ -187,6 +305,12 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const newWeightLogs = [initialLog];
     setWeightLogs(newWeightLogs);
     await AsyncStorage.setItem('@bulk_weight_logs', JSON.stringify(newWeightLogs));
+
+    if (isConfigured && auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      await setDoc(doc(db, 'users', uid), { ...profile, streak: 0 });
+      await setDoc(doc(db, 'users', uid, 'weight_logs', initialLog.id), initialLog);
+    }
   };
 
   const addFoodLog = async (food: Omit<FoodLog, 'id' | 'date'>) => {
@@ -200,12 +324,20 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setFoodLogs(updatedFoods);
     await AsyncStorage.setItem('@bulk_food_logs', JSON.stringify(updatedFoods));
 
-    // Update streak if this is the first log of today
     const uniqueDays = new Set(foodLogs.map(f => f.date));
+    let newStreak = streak;
     if (!uniqueDays.has(today)) {
-      const newStreak = streak + 1;
+      newStreak = streak + 1;
       setStreak(newStreak);
       await AsyncStorage.setItem('@bulk_streak', JSON.stringify(newStreak));
+    }
+
+    if (isConfigured && auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      await setDoc(doc(db, 'users', uid, 'food_logs', newLog.id), newLog);
+      if (userProfile) {
+        await setDoc(doc(db, 'users', uid), { streak: newStreak }, { merge: true });
+      }
     }
   };
 
@@ -213,6 +345,11 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updatedFoods = foodLogs.filter(f => f.id !== id);
     setFoodLogs(updatedFoods);
     await AsyncStorage.setItem('@bulk_food_logs', JSON.stringify(updatedFoods));
+
+    if (isConfigured && auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      await deleteDoc(doc(db, 'users', uid, 'food_logs', id));
+    }
   };
 
   const addWeightLog = async (weight: number) => {
@@ -222,7 +359,6 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       weight,
       date: today
     };
-    // If today's log already exists, replace it, else append
     const existingIndex = weightLogs.findIndex(w => w.date === today);
     let updatedWeights = [...weightLogs];
     if (existingIndex > -1) {
@@ -233,11 +369,19 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setWeightLogs(updatedWeights);
     await AsyncStorage.setItem('@bulk_weight_logs', JSON.stringify(updatedWeights));
 
-    // Also update current profile weight
+    let updatedProfile = userProfile;
     if (userProfile) {
-      const updatedProfile = { ...userProfile, weightCurrent: weight };
+      updatedProfile = { ...userProfile, weightCurrent: weight };
       setUserProfile(updatedProfile);
       await AsyncStorage.setItem('@bulk_user_profile', JSON.stringify(updatedProfile));
+    }
+
+    if (isConfigured && auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      await setDoc(doc(db, 'users', uid, 'weight_logs', newLog.id), newLog);
+      if (updatedProfile) {
+        await setDoc(doc(db, 'users', uid), { weightCurrent: weight }, { merge: true });
+      }
     }
   };
 
@@ -245,11 +389,23 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const newWater = waterLoggedMl + ml;
     setWaterLoggedMl(newWater);
     await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(newWater));
+
+    if (isConfigured && auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      const today = new Date().toISOString().split('T')[0];
+      await setDoc(doc(db, 'users', uid, 'water_logs', today), { ml: newWater, date: today });
+    }
   };
 
   const resetWater = async () => {
     setWaterLoggedMl(0);
     await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(0));
+
+    if (isConfigured && auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      const today = new Date().toISOString().split('T')[0];
+      await setDoc(doc(db, 'users', uid, 'water_logs', today), { ml: 0, date: today });
+    }
   };
 
   const resetAllData = async () => {
@@ -259,12 +415,19 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setWeightLogs([]);
     setWaterLoggedMl(0);
     setStreak(0);
+    
     await AsyncStorage.removeItem('@bulk_user_profile');
     await AsyncStorage.removeItem('@bulk_is_onboarded');
     await AsyncStorage.removeItem('@bulk_food_logs');
     await AsyncStorage.removeItem('@bulk_weight_logs');
     await AsyncStorage.removeItem('@bulk_water_logged');
     await AsyncStorage.removeItem('@bulk_streak');
+
+    if (isConfigured && auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      await deleteDoc(doc(db, 'users', uid));
+      await auth.signOut();
+    }
   };
 
   return (
