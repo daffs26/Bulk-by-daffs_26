@@ -121,4 +121,54 @@ export const FOOD_DATABASE: DBFood[] = [
   { id: '96', name: 'Kopi Susu Gula Aren (1 Gelas)', calories: 180, protein: 4.5, carbs: 24, fat: 7.2, category: 'Drinks' },
   { id: '97', name: 'Teh Tarik (200ml)', calories: 140, protein: 3.2, carbs: 22, fat: 4.5, category: 'Drinks' },
   { id: '98', name: 'Susu Kedelai Manis (200ml)', calories: 95, protein: 6.0, carbs: 10.5, fat: 3.2, category: 'Drinks' },
+  
+  // ── MORE MEAL VARIANTS ──
+  { id: '99', name: 'Nasi Goreng Gila (1 Porsi)', calories: 450, protein: 14, carbs: 54, fat: 19, category: 'Meals' },
+  { id: '100', name: 'Mie Goreng Aceh (1 Porsi)', calories: 410, protein: 12, carbs: 56, fat: 15, category: 'Meals' },
+  { id: '101', name: 'Seblak Ceker Komplit (1 Porsi)', calories: 380, protein: 10, carbs: 48, fat: 16, category: 'Meals' },
+  { id: '102', name: 'Burger Sapi Keju / Cheeseburger', calories: 450, protein: 22, carbs: 38, fat: 22, category: 'Meals' },
+  { id: '103', name: 'Pizza Pepperoni (1 Slice)', calories: 290, protein: 12, carbs: 28, fat: 12, category: 'Meals' },
+  { id: '104', name: 'Kebab Daging Sapi (1 pcs)', calories: 350, protein: 16, carbs: 34, fat: 15, category: 'Meals' },
+  { id: '105', name: 'Ayam Geprek + Nasi (1 Porsi)', calories: 540, protein: 28, carbs: 62, fat: 20, category: 'Meals' },
+
+  // ── MORE PROTEIN VARIANTS ──
+  { id: '106', name: 'Ikan Lele Goreng (1 Ekor/100g)', calories: 200, protein: 18, carbs: 0, fat: 14, category: 'Protein' },
+  { id: '107', name: 'Daging Bebek Goreng (100g)', calories: 330, protein: 19, carbs: 0, fat: 28, category: 'Protein' },
+  { id: '108', name: 'Cumi Cah Saus Padang (100g)', calories: 185, protein: 16, carbs: 6.0, fat: 10.5, category: 'Protein' },
+  { id: '109', name: 'Udang Goreng Tepung (100g)', calories: 220, protein: 15, carbs: 12, fat: 12.5, category: 'Protein' },
+  { id: '110', name: 'Putih Telur Rebus (100g)', calories: 52, protein: 11, carbs: 0.7, fat: 0.2, category: 'Protein' },
+  { id: '111', name: 'Sate Daging Sapi (5 Tusuk)', calories: 240, protein: 22, carbs: 4.0, fat: 14.5, category: 'Protein' },
+  { id: '112', name: 'Ikan Kakap Bakar (100g)', calories: 140, protein: 20, carbs: 0, fat: 6.0, category: 'Protein' },
+
+  // ── MORE CARBOHYDRATE VARIANTS ──
+  { id: '113', name: 'Jagung Manis Pipil (100g)', calories: 86, protein: 3.2, carbs: 19, fat: 1.2, category: 'Carbohydrates' },
+  { id: '114', name: 'Kentang Tumbuk / Mashed Potato (100g)', calories: 110, protein: 2.0, carbs: 17, fat: 4.2, category: 'Carbohydrates' },
+  { id: '115', name: 'Roti Canai Polos (1 Lembar)', calories: 280, protein: 5.0, carbs: 46, fat: 8.5, category: 'Carbohydrates' },
+  { id: '116', name: 'Ubi Ungu Kukus (100g)', calories: 120, protein: 1.5, carbs: 28, fat: 0.2, category: 'Carbohydrates' },
+
+  // ── MORE VEGETABLE VARIANTS ──
+  { id: '117', name: 'Plecing Kangkung (1 Porsi)', calories: 80, protein: 2.5, carbs: 8.0, fat: 4.5, category: 'Vegetables' },
+  { id: '118', name: 'Tumis Kacang Panjang Tempe', calories: 115, protein: 5.5, carbs: 10.5, fat: 6.0, category: 'Vegetables' },
+  { id: '119', name: 'Urap Sayur Bumbu Kelapa', calories: 140, protein: 3.5, carbs: 16, fat: 7.5, category: 'Vegetables' },
+  { id: '120', name: 'Lalapan Segar Mix (Timun, Kemangi)', calories: 20, protein: 0.6, carbs: 4.2, fat: 0.1, category: 'Vegetables' },
+
+  // ── MORE FRUIT VARIANTS ──
+  { id: '121', name: 'Jeruk Bali (100g)', calories: 38, protein: 0.8, carbs: 9.6, fat: 0.0, category: 'Fruits' },
+  { id: '122', name: 'Nanas Madu (100g)', calories: 50, protein: 0.5, carbs: 13, fat: 0.1, category: 'Fruits' },
+  { id: '123', name: 'Salak Pondoh (2 Buah)', calories: 75, protein: 0.6, carbs: 18, fat: 0.3, category: 'Fruits' },
+
+  // ── MORE SNACK VARIANTS ──
+  { id: '124', name: 'Tahu Bulat Kopong (3 pcs)', calories: 120, protein: 3.0, carbs: 8.0, fat: 8.5, category: 'Snacks' },
+  { id: '125', name: 'Cimol Bumbu Bubuk (1 Porsi)', calories: 210, protein: 1.2, carbs: 38, fat: 5.8, category: 'Snacks' },
+  { id: '126', name: 'Risol Mayo Beef (1 pcs)', calories: 220, protein: 4.5, carbs: 22, fat: 12, category: 'Snacks' },
+  { id: '127', name: 'Pastel Daging Sayur (1 pcs)', calories: 180, protein: 3.8, carbs: 24, fat: 7.5, category: 'Snacks' },
+  { id: '128', name: 'Lumpia Semarang Goreng (1 pcs)', calories: 210, protein: 5.2, carbs: 28, fat: 8.5, category: 'Snacks' },
+  { id: '129', name: 'Onde-Onde Wijen (1 pcs)', calories: 150, protein: 2.8, carbs: 24, fat: 4.8, category: 'Snacks' },
+
+  // ── MORE DRINK VARIANTS ──
+  { id: '130', name: 'Jus Jeruk Murni (200ml)', calories: 90, protein: 1.4, carbs: 21, fat: 0.2, category: 'Drinks' },
+  { id: '131', name: 'Jus Melon (200ml)', calories: 80, protein: 0.8, carbs: 19, fat: 0.1, category: 'Drinks' },
+  { id: '132', name: 'Yogurt Plain (100g)', calories: 60, protein: 3.5, carbs: 4.7, fat: 3.3, category: 'Drinks' },
+  { id: '133', name: 'Susu Almond Unsweetened (200ml)', calories: 30, protein: 1.0, carbs: 1.5, fat: 2.5, category: 'Drinks' },
+  { id: '134', name: 'Es Kelapa Muda Gula Merah', calories: 160, protein: 0.8, carbs: 32, fat: 3.5, category: 'Drinks' },
 ];
