@@ -46,3 +46,5 @@ example
 *.docx
 temp_plan.md
 .env
+
+.vercel
