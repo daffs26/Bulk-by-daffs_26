@@ -12,6 +12,10 @@ export default function Html({ children }: { children: React.ReactNode }) {
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#FF6B00" />
         
+        {/* Favicon configuration with cache busting */}
+        <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon" />
+        <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/x-icon" />
+        
         {/* iOS PWA compatibility */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
