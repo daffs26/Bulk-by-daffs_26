@@ -187,14 +187,24 @@ export default function OnboardingScreen() {
         borderBottomWidth: 1,
         borderBottomColor: c.border,
       }}>
-        <Text style={{
-          fontSize: 20,
-          fontFamily: 'Outfit_800ExtraBold',
-          color: c.text,
-          letterSpacing: -0.3,
-        }}>
-          B<Text style={{ color: Accent.primary }}>ULK</Text>
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+          <Text style={{
+            fontSize: 20,
+            fontFamily: 'Outfit_800ExtraBold',
+            color: c.text,
+            letterSpacing: -0.3,
+          }}>
+            B
+          </Text>
+          <Text style={{
+            fontSize: 20,
+            fontFamily: 'Outfit_800ExtraBold',
+            color: Accent.primary,
+            letterSpacing: -0.3,
+          }}>
+            ULK
+          </Text>
+        </View>
         {/* Progress dots */}
         {user && (
           <View style={{ flexDirection: 'row', gap: 6 }}>
