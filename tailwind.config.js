@@ -10,18 +10,21 @@ module.exports = {
   darkMode: "class",
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Outfit", "sans-serif"],
+        outfit: ["Outfit", "sans-serif"],
+      },
       colors: {
-        // Theme Colors
         dark: {
-          bg: "#0E0E10",
-          card: "#1E1F24",
-          accent: "#F97316", // Orange
+          bg: "#0B0B0C",
+          card: "#161618",
+          accent: "#FF6B00", // Orange
         },
         light: {
-          bg: "#FFFFFF",
-          card: "#F0F4F8", // Soft blue/gray
+          bg: "#F4F4F5",
+          card: "#FFFFFF",
           accent: "#2563EB", // Blue
-          secondary: "#F97316", // Orange
+          secondary: "#FF6B00", // Orange
         }
       }
     },

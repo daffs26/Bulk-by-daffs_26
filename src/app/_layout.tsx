@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppStateProvider, useAppState } from '@/hooks/useAppState';
+import { useFonts, Outfit_300Light, Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold, Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
 import '../global.css';
 
 function AppLayoutContent() {
@@ -35,6 +36,19 @@ function AppLayoutContent() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Outfit_300Light,
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_600SemiBold,
+    Outfit_700Bold,
+    Outfit_800ExtraBold,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <AppStateProvider>
       <AppLayoutContent />
