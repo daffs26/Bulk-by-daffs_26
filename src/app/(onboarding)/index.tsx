@@ -5,7 +5,6 @@ import { useAppState, calculateFitnessMetrics, UserProfile } from '@/hooks/useAp
 import { Colors, Accent } from '@/constants/theme';
 import { ChevronRight, ChevronLeft, Award, Scale, Activity, ArrowRight, User as UserIcon, Flame, Sparkles, Barcode } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 
 export default function OnboardingScreen() {
   const { setOnboardingData, theme, user, signInWithGoogle } = useAppState();
@@ -227,7 +226,7 @@ export default function OnboardingScreen() {
 
         {/* ══════════ STEP 0: Google Login ══════════ */}
         {!user && (
-          <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 16 }}>
+          <View style={{ flexGrow: 1, justifyContent: 'space-between', paddingVertical: 16 }}>
             {/* Branding Header */}
             <View style={{ alignItems: 'center', marginTop: 30, marginBottom: 20 }}>
               <View style={{
@@ -388,12 +387,12 @@ export default function OnboardingScreen() {
                 Dengan masuk, Anda menyetujui sinkronisasi data kebugaran Anda secara aman ke server Cloud Firestore kami.
               </Text>
             </View>
-          </Animated.View>
+          </View>
         )}
 
         {/* ══════════ STEP 1: Goal ══════════ */}
         {user && step === 1 && (
-          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center', gap: 24 }}>
+          <View style={{ flexGrow: 1, justifyContent: 'center', gap: 24 }}>
             <View style={{ marginBottom: 8 }}>
               <Text style={{
                 fontSize: 28,
@@ -468,12 +467,12 @@ export default function OnboardingScreen() {
                 <ChevronRight color="white" size={18} />
               </LinearGradient>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         )}
 
         {/* ══════════ STEP 2: Data Diri ══════════ */}
         {user && step === 2 && (
-          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
+          <View style={{ flexGrow: 1, justifyContent: 'center' }}>
             <View style={{ marginBottom: 24 }}>
               <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Data Diri Kamu</Text>
               <Text style={{ fontSize: 14, fontFamily: 'Outfit_500Medium', color: c.textSub, marginTop: 8, lineHeight: 22 }}>
@@ -565,12 +564,12 @@ export default function OnboardingScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-          </Animated.View>
+          </View>
         )}
 
         {/* ══════════ STEP 3: BMI Check ══════════ */}
         {user && step === 3 && bmiDetails && (
-          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
+          <View style={{ flexGrow: 1, justifyContent: 'center' }}>
             <View style={{ marginBottom: 24 }}>
               <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Pemeriksaan BMI</Text>
               <Text style={{ fontSize: 14, fontFamily: 'Outfit_500Medium', color: c.textSub, marginTop: 8 }}>Hasil hitung komposisi tubuh otomatis.</Text>
@@ -696,12 +695,12 @@ export default function OnboardingScreen() {
                 </>
               )}
             </View>
-          </Animated.View>
+          </View>
         )}
 
         {/* ══════════ STEP 5: Target Weight ══════════ */}
         {user && step === 5 && bmiDetails && (
-          <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1, justifyContent: 'center' }}>
+          <View style={{ flexGrow: 1, justifyContent: 'center' }}>
             <View style={{ marginBottom: 24 }}>
               <Text style={{ fontSize: 28, fontFamily: 'Outfit_800ExtraBold', color: c.text, letterSpacing: -0.5 }}>Target Berat Badan</Text>
               <Text style={{ fontSize: 14, fontFamily: 'Outfit_500Medium', color: c.textSub, marginTop: 8 }}>Tentukan berat badan yang ingin kamu capai.</Text>
@@ -721,7 +720,7 @@ export default function OnboardingScreen() {
               </View>
 
               {calculateEstimation() && (
-                <Animated.View entering={FadeIn} exiting={FadeOut}>
+                <View>
                   <View style={{
                     padding: 20,
                     borderRadius: 18,
@@ -749,7 +748,7 @@ export default function OnboardingScreen() {
                       Dihitung berdasarkan target kalori harian {bmiDetails.targetCalories} kcal.
                     </Text>
                   </View>
-                </Animated.View>
+                </View>
               )}
             </View>
 
@@ -766,9 +765,10 @@ export default function OnboardingScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-          </Animated.View>
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
+

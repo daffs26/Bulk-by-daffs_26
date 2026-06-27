@@ -4,7 +4,7 @@ import { useAppState } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
 import { Scale, Plus, Calendar, ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+
 
 export default function ProgressScreen() {
   const { userProfile, foodLogs, weightLogs, addWeightLog, theme } = useAppState();
@@ -75,7 +75,7 @@ export default function ProgressScreen() {
         </View>
 
         {/* ── Weight Progress Card ── */}
-        <Animated.View entering={FadeInDown.duration(400)}>
+        <View>
           <View style={{
             backgroundColor: c.surface,
             borderWidth: 1,
@@ -183,10 +183,10 @@ export default function ProgressScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* ── Bar Chart Card ── */}
-        <Animated.View entering={FadeInDown.duration(450)}>
+        <View>
           <View style={{
             backgroundColor: c.surface,
             borderWidth: 1,
@@ -278,10 +278,10 @@ export default function ProgressScreen() {
               </Text>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* ── Weight Log History ── */}
-        <Animated.View entering={FadeInDown.duration(500)}>
+        <View>
           <View style={{
             backgroundColor: c.surface,
             borderWidth: 1,
@@ -335,9 +335,10 @@ export default function ProgressScreen() {
               </View>
             ))}
           </View>
-        </Animated.View>
+        </View>
 
       </ScrollView>
     </SafeAreaView>
   );
 }
+

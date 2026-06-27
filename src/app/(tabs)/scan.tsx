@@ -26,7 +26,6 @@ import {
   Plus
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import * as ImagePicker from 'expo-image-picker';
 import { FOOD_DATABASE, DBFood } from '@/constants/foods';
 
@@ -440,7 +439,7 @@ export default function CameraScanScreen() {
           <View style={{ flex: 1 }}>
             {/* ── IDLE State ── */}
             {photoScanState === 'idle' && (
-              <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 8 }}>
+              <View style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 8 }}>
                 {/* Camera Viewfinder */}
                 <View style={{
                   flex: 1,
@@ -539,12 +538,12 @@ export default function CameraScanScreen() {
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
-              </Animated.View>
+              </View>
             )}
 
             {/* ── SCANNING State ── */}
             {photoScanState === 'scanning' && (
-              <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <ActivityIndicator size="large" color={Accent.primary} />
                 <Text style={{
                   fontSize: 16,
@@ -563,12 +562,12 @@ export default function CameraScanScreen() {
                 }}>
                   Mengestimasi porsi & volume makro nutrisi
                 </Text>
-              </Animated.View>
+              </View>
             )}
 
             {/* ── RESULT State ── */}
             {photoScanState === 'result' && (
-              <Animated.View entering={FadeIn} layout={Layout.springify()} style={{ flex: 1 }}>
+              <View style={{ flex: 1 }}>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
                   
                   {/* Real Uploaded Image Preview */}
@@ -915,7 +914,7 @@ export default function CameraScanScreen() {
                   </View>
 
                 </ScrollView>
-              </Animated.View>
+              </View>
             )}
           </View>
         )}
@@ -928,7 +927,7 @@ export default function CameraScanScreen() {
             
             {/* ── BARCODE LOADING STATE ── */}
             {isSearchingBarcode && (
-              <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <ActivityIndicator size="large" color={Accent.primary} />
                 <Text style={{
                   fontSize: 16,
@@ -947,12 +946,12 @@ export default function CameraScanScreen() {
                 }}>
                   Mengambil data kandungan gizi produk real-time
                 </Text>
-              </Animated.View>
+              </View>
             )}
 
             {/* ── BARCODE SCANNING CAMERA SIMULATION STATE ── */}
             {isScanningCamera && !isSearchingBarcode && (
-              <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <View style={{
                   width: 280,
                   height: 180,
@@ -994,7 +993,7 @@ export default function CameraScanScreen() {
                 }}>
                   Mencocokkan pola laser barcode
                 </Text>
-              </Animated.View>
+              </View>
             )}
 
             {/* ── BARCODE IDLE/INPUT STATE ── */}
@@ -1576,3 +1575,4 @@ const manualInputStyle = (c: typeof Colors.dark, isCenter: boolean = false) => (
   color: c.text,
   textAlign: (isCenter ? 'center' : 'left') as any,
 });
+

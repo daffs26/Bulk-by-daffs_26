@@ -4,7 +4,7 @@ import { useAppState } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
 import { User, Sun, Moon, RefreshCw, Activity, Scale, Info, LogOut } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+
 
 export default function SettingsScreen() {
   const { userProfile, theme, toggleTheme, resetAllData, logout, user } = useAppState();
@@ -56,7 +56,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* ── Theme Toggler ── */}
-        <Animated.View entering={FadeInDown.duration(400)}>
+        <View>
           <View style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -110,11 +110,11 @@ export default function SettingsScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
 
         {/* ── Profile Card ── */}
         {userProfile && (
-          <Animated.View entering={FadeInDown.duration(450)}>
+          <View>
             <View style={{
               borderRadius: 24,
               backgroundColor: c.surface,
@@ -219,11 +219,11 @@ export default function SettingsScreen() {
                 </View>
               </View>
             </View>
-          </Animated.View>
+          </View>
         )}
 
         {/* ── Logout Button ── */}
-        <Animated.View entering={FadeInDown.duration(480)}>
+        <View>
           <TouchableOpacity
             onPress={() => {
               Alert.alert(
@@ -263,10 +263,10 @@ export default function SettingsScreen() {
               Keluar dari Akun
             </Text>
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
         {/* ── Danger Zone ── */}
-        <Animated.View entering={FadeInDown.duration(500)}>
+        <View>
           <TouchableOpacity
             onPress={handleReset}
             style={{
@@ -304,7 +304,7 @@ export default function SettingsScreen() {
               BULK App v1.0.0 (by @daffs_26)
             </Text>
           </View>
-        </Animated.View>
+        </View>
 
       </ScrollView>
     </SafeAreaView>
@@ -341,3 +341,4 @@ function DataRow({
     </View>
   );
 }
+

@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { initializeFirestore, memoryLocalCache } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -14,19 +14,21 @@ const firebaseConfig = {
 // Check if we have minimum config keys
 const isConfigured = !!process.env.EXPO_PUBLIC_FIREBASE_API_KEY;
 
-// Initialize Firebase App
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase App safely
+let app: any = null;
+let auth: any = null;
+let db: any = null;
 
-// Initialize Auth
-const auth = getAuth(app);
-
-// Initialize Firestore with persistent cache for offline-first support
-const db = isConfigured
-  ? initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-      }),
-    })
-  : null as any;
+if (isConfigured) {
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    db = initializeFirestore(app, {
+      localCache: memoryLocalCache(),
+    });
+  } catch (e) {
+    console.warn('Firebase initialization failed, running offline', e);
+  }
+}
 
 export { app, auth, db, isConfigured };

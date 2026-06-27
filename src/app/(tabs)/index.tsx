@@ -5,12 +5,6 @@ import { Colors, Accent } from '@/constants/theme';
 import { Flame, Droplet, FlameKindling, Plus, Zap } from 'lucide-react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  FadeInDown,
-} from 'react-native-reanimated';
 
 /* ── Circular Macro Ring Component ── */
 function MacroRing({
@@ -124,16 +118,8 @@ export default function DashboardScreen() {
   const caloriePercent = Math.min(1, caloriesEaten / targetCalories);
   const waterPercent = Math.min(1, waterLoggedMl / waterGoal);
 
-  // Water animation
-  const waterAnimScale = useSharedValue(1);
-  const animatedWaterStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: waterAnimScale.value }],
-  }));
-
   const handleAddWater = (ml: number) => {
     addWater(ml);
-    waterAnimScale.value = 1.15;
-    waterAnimScale.value = withSpring(1, { damping: 10, stiffness: 100 });
   };
 
   return (
@@ -184,7 +170,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* ── Calorie Hero Card (Gradient Orange) ── */}
-        <Animated.View entering={FadeInDown.duration(400)}>
+        <View>
           <LinearGradient
             colors={[Accent.primary, Accent.primaryDark]}
             start={{ x: 0, y: 0 }}
@@ -264,10 +250,10 @@ export default function DashboardScreen() {
               </Text>
             </View>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
         {/* ── Macro Rings Card ── */}
-        <Animated.View entering={FadeInDown.duration(450)}>
+        <View>
           <View style={{
             backgroundColor: c.surface,
             borderColor: c.border,
@@ -310,10 +296,10 @@ export default function DashboardScreen() {
               />
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* ── Water Tracker ── */}
-        <Animated.View entering={FadeInDown.duration(500)}>
+        <View>
           <View style={{
             backgroundColor: c.surface,
             borderColor: c.border,
@@ -352,9 +338,9 @@ export default function DashboardScreen() {
                   </Text>
                 </View>
               </View>
-              <Animated.View style={animatedWaterStyle}>
+              <View>
                 <Droplet color={Accent.primary} size={32} />
-              </Animated.View>
+              </View>
             </View>
 
             {/* Water progress */}
@@ -444,10 +430,10 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* ── Daily Lifestyle Tip ── */}
-        <Animated.View entering={FadeInDown.duration(550)}>
+        <View>
           <View style={{
             borderRadius: 24,
             padding: 20,
@@ -477,7 +463,7 @@ export default function DashboardScreen() {
               Untuk memaksimalkan goal {userProfile?.goal.toUpperCase() || 'MAINTENANCE'} kamu, pastikan tidur 7-8 jam malam ini dan pertahankan asupan air minum harianmu.
             </Text>
           </View>
-        </Animated.View>
+        </View>
 
       </ScrollView>
     </SafeAreaView>

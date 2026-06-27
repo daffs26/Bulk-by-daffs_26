@@ -4,7 +4,6 @@ import { useAppState, FoodLog } from '@/hooks/useAppState';
 import { FOOD_DATABASE, DBFood } from '@/constants/foods';
 import { Colors, Accent } from '@/constants/theme';
 import { Plus, Search, Trash2, X, ChevronRight, Edit3 } from 'lucide-react-native';
-import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 
 const MEAL_COLORS: Record<string, string> = {
   breakfast: Accent.primary,
@@ -89,10 +88,7 @@ export default function FoodDiaryScreen() {
   const renderLoggedFoodItem = (item: FoodLog) => {
     const mealColor = MEAL_COLORS[item.mealType] || Accent.primary;
     return (
-      <Animated.View
-        layout={Layout.springify()}
-        entering={FadeIn}
-        exiting={FadeOut}
+      <View
         key={item.id}
         style={{
           flexDirection: 'row',
@@ -140,7 +136,7 @@ export default function FoodDiaryScreen() {
             <Trash2 size={15} color="#EF4444" />
           </TouchableOpacity>
         </View>
-      </Animated.View>
+      </View>
     );
   };
 
