@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -10,6 +10,7 @@ import {
   TextInput, 
   ScrollView 
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppState } from '@/hooks/useAppState';
 import { Colors, Accent, Semantic } from '@/constants/theme';
 import { 
@@ -23,7 +24,8 @@ import {
   Barcode, 
   AlertCircle, 
   RefreshCw,
-  Plus
+  Plus,
+  Info
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
@@ -46,6 +48,22 @@ export default function CameraScanScreen() {
   const c = Colors[theme];
   const isDark = theme === 'dark';
 
+  const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [tempKey, setTempKey] = useState('');
+
+  useEffect(() => {
+    const loadKey = async () => {
+      try {
+        const key = await AsyncStorage.getItem('@bulk_gemini_api_key');
+        setGeminiApiKey(key);
+      } catch (err) {
+        console.error('Failed to load Gemini key:', err);
+      }
+    };
+    loadKey();
+  }, []);
+
   // Mode: 'photo' (AI Scan Foto) or 'barcode' (Scan Barcode)
   const [mode, setMode] = useState<'photo' | 'barcode'>('photo');
 
@@ -62,28 +80,145 @@ export default function CameraScanScreen() {
   const [isSearching, setIsSearching] = useState(false);
 
   // Pick random candidates to simulate AI visual classification
-  const generateCandidates = () => {
-    const meals = FOOD_DATABASE.filter(f => f.category === 'Meals');
-    const proteins = FOOD_DATABASE.filter(f => f.category === 'Protein');
-    const snacks = FOOD_DATABASE.filter(f => f.category === 'Snacks' || f.category === 'Carbohydrates');
-
-    const c1 = meals[Math.floor(Math.random() * meals.length)] || FOOD_DATABASE[0];
-    const c2 = proteins[Math.floor(Math.random() * proteins.length)] || FOOD_DATABASE[1];
-    const c3 = snacks[Math.floor(Math.random() * snacks.length)] || FOOD_DATABASE[2];
-
-    const list = [c1, c2, c3];
-    setCandidates(list);
-    setSelectedFood(list[0]);
+  const uriToBase64 = async (uri: string): Promise<string> => {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        } else {
+          reject(new Error('Failed to read image content as base64'));
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
-  const triggerPhotoScan = () => {
+  const runGeminiScan = async (uri: string) => {
+    setPhotoScanState('scanning');
+    try {
+      const base64Data = await uriToBase64(uri);
+      
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `Analyze this food image. Provide nutritional estimation for the food items identified in the image. 
+You must respond with a JSON array of food items in this format: 
+[
+  {
+    "name": "Food Name in Indonesian (e.g. Nasi Goreng)", 
+    "calories": number, 
+    "protein": number, 
+    "carbs": number, 
+    "fat": number, 
+    "category": "Meals" | "Protein" | "Snacks" | "Carbohydrates"
+  }
+]
+Return only this JSON array, no markdown wrappers (like \`\`\`json), and no conversational text.`
+                  },
+                  {
+                    inlineData: {
+                      mimeType: "image/jpeg",
+                      data: base64Data
+                    }
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const textResult = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!textResult) {
+        throw new Error('Gemini API returned an empty response.');
+      }
+
+      const parsedFoods = JSON.parse(textResult.trim());
+      if (Array.isArray(parsedFoods) && parsedFoods.length > 0) {
+        const formattedCandidates: DBFood[] = parsedFoods.map((f: any, idx: number) => ({
+          id: `gemini-${Date.now()}-${idx}`,
+          name: f.name || 'Makanan Terdeteksi',
+          calories: Number(f.calories) || 0,
+          protein: Number(f.protein) || 0,
+          carbs: Number(f.carbs) || 0,
+          fat: Number(f.fat) || 0,
+          category: f.category || 'Meals',
+        }));
+
+        setCandidates(formattedCandidates);
+        setSelectedFood(formattedCandidates[0]);
+        setPhotoScanState('result');
+        setPortionScale(1.0);
+        setIsSearching(false);
+        setSearchQuery('');
+      } else {
+        throw new Error('Invalid JSON format or empty array received from Gemini.');
+      }
+    } catch (error) {
+      console.error('Error in runGeminiScan:', error);
+      Alert.alert(
+        'Scan AI Gagal',
+        'Gagal menganalisis foto menggunakan Gemini AI. Pastikan API Key benar dan Anda memiliki koneksi internet, lalu coba lagi. (Mengalihkan ke mode simulasi...)',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              triggerPhotoScanSimulated();
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  const triggerPhotoScan = (uri: string) => {
+    if (geminiApiKey) {
+      runGeminiScan(uri);
+    } else {
+      triggerPhotoScanSimulated();
+    }
+  };
+
+  const triggerPhotoScanSimulated = () => {
     setPhotoScanState('scanning');
     setTimeout(() => {
       setPhotoScanState('result');
       setPortionScale(1.0);
       setIsSearching(false);
       setSearchQuery('');
-      generateCandidates();
+      const meals = FOOD_DATABASE.filter(f => f.category === 'Meals');
+      const proteins = FOOD_DATABASE.filter(f => f.category === 'Protein');
+      const snacks = FOOD_DATABASE.filter(f => f.category === 'Snacks' || f.category === 'Carbohydrates');
+
+      const c1 = meals[Math.floor(Math.random() * meals.length)] || FOOD_DATABASE[0];
+      const c2 = proteins[Math.floor(Math.random() * proteins.length)] || FOOD_DATABASE[1];
+      const c3 = snacks[Math.floor(Math.random() * snacks.length)] || FOOD_DATABASE[2];
+
+      const list = [c1, c2, c3];
+      setCandidates(list);
+      setSelectedFood(list[0]);
     }, 2000);
   };
 
@@ -102,8 +237,9 @@ export default function CameraScanScreen() {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
-      triggerPhotoScan();
+      const uri = result.assets[0].uri;
+      setImageUri(uri);
+      triggerPhotoScan(uri);
     }
   };
 
@@ -122,8 +258,9 @@ export default function CameraScanScreen() {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
-      triggerPhotoScan();
+      const uri = result.assets[0].uri;
+      setImageUri(uri);
+      triggerPhotoScan(uri);
     }
   };
 
@@ -439,7 +576,138 @@ export default function CameraScanScreen() {
           <View style={{ flex: 1 }}>
             {/* ── IDLE State ── */}
             {photoScanState === 'idle' && (
-              <View style={{ flex: 1, justifyContent: 'space-between', paddingVertical: 8 }}>
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between', paddingVertical: 8 }}>
+                
+                {/* Gemini API Key Configuration Card */}
+                <View style={{
+                  backgroundColor: c.surface,
+                  borderWidth: 1,
+                  borderColor: geminiApiKey ? Accent.glow : c.border,
+                  borderRadius: 20,
+                  padding: 16,
+                  marginBottom: 16,
+                }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color={geminiApiKey ? Accent.primary : c.textMuted} />
+                      <Text style={{ fontSize: 13, fontFamily: 'Outfit_700Bold', color: c.text }}>
+                        {geminiApiKey ? 'Gemini AI Aktif' : 'Gemini AI (Belum Aktif)'}
+                      </Text>
+                    </View>
+                    {!showKeyInput && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setTempKey(geminiApiKey || '');
+                          setShowKeyInput(true);
+                        }}
+                        style={{
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 8,
+                          backgroundColor: geminiApiKey ? 'transparent' : Accent.pale,
+                          borderWidth: 1,
+                          borderColor: geminiApiKey ? Accent.primary : 'transparent',
+                        }}
+                      >
+                        <Text style={{ fontSize: 11, fontFamily: 'Outfit_600SemiBold', color: Accent.primary }}>
+                          {geminiApiKey ? 'Ubah Key' : 'Input Key'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  {showKeyInput ? (
+                    <View style={{ marginTop: 8 }}>
+                      <Text style={{ fontSize: 11, fontFamily: 'Outfit_600SemiBold', color: c.textMuted, marginBottom: 6 }}>
+                        Tempelkan Gemini API Key Anda:
+                      </Text>
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: c.surface2,
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: c.border,
+                        paddingHorizontal: 10,
+                        marginBottom: 10,
+                      }}>
+                        <TextInput
+                          placeholder="AIzaSy..."
+                          placeholderTextColor={c.textMuted}
+                          value={tempKey}
+                          onChangeText={setTempKey}
+                          secureTextEntry={true}
+                          style={{
+                            flex: 1,
+                            paddingVertical: 8,
+                            fontSize: 12,
+                            fontFamily: 'Outfit_500Medium',
+                            color: c.text,
+                          }}
+                        />
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity
+                          onPress={async () => {
+                            if (tempKey.trim()) {
+                              await AsyncStorage.setItem('@bulk_gemini_api_key', tempKey.trim());
+                              setGeminiApiKey(tempKey.trim());
+                              Alert.alert('Sukses', 'API Key Gemini berhasil disimpan!');
+                            }
+                            setShowKeyInput(false);
+                          }}
+                          style={{
+                            flex: 1,
+                            backgroundColor: Accent.primary,
+                            paddingVertical: 8,
+                            borderRadius: 8,
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, fontFamily: 'Outfit_600SemiBold', color: '#FFF' }}>Simpan</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setShowKeyInput(false)}
+                          style={{
+                            flex: 1,
+                            backgroundColor: c.surface2,
+                            paddingVertical: 8,
+                            borderRadius: 8,
+                            alignItems: 'center',
+                            borderWidth: 1,
+                            borderColor: c.border,
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, fontFamily: 'Outfit_600SemiBold', color: c.text }}>Batal</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View>
+                      <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted, lineHeight: 16 }}>
+                        {geminiApiKey 
+                          ? 'API Key terdeteksi. Foto yang diunggah akan dianalisis secara real-time oleh model AI Gemini.' 
+                          : 'Menggunakan mode simulasi offline. Dapatkan API Key gratis di aistudio.google.com lalu klik "Input Key" di atas.'}
+                      </Text>
+                      
+                      {geminiApiKey && (
+                        <TouchableOpacity 
+                          onPress={async () => {
+                            await AsyncStorage.removeItem('@bulk_gemini_api_key');
+                            setGeminiApiKey(null);
+                            Alert.alert('Sukses', 'API Key berhasil dihapus. Kembali ke mode simulasi.');
+                          }}
+                          style={{ marginTop: 8, alignSelf: 'flex-start' }}
+                        >
+                          <Text style={{ fontSize: 11, fontFamily: 'Outfit_600SemiBold', color: '#EF4444' }}>
+                            Hapus API Key
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                </View>
+
                 {/* Camera Viewfinder */}
                 <View style={{
                   flex: 1,
@@ -453,6 +721,7 @@ export default function CameraScanScreen() {
                   overflow: 'hidden',
                   position: 'relative',
                   padding: 20,
+                  minHeight: 220,
                 }}>
                   {/* Corner brackets */}
                   <View style={{ position: 'absolute', top: 24, left: 24, width: 28, height: 28, borderTopWidth: 3, borderLeftWidth: 3, borderColor: Accent.primary, borderTopLeftRadius: 6 }} />
@@ -538,7 +807,7 @@ export default function CameraScanScreen() {
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </ScrollView>
             )}
 
             {/* ── SCANNING State ── */}

@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert, TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppState } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
-import { User, Sun, Moon, RefreshCw, Activity, Scale, Info, LogOut } from 'lucide-react-native';
+import { User, Sun, Moon, RefreshCw, Activity, Scale, Info, LogOut, Key, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 
@@ -10,6 +11,41 @@ export default function SettingsScreen() {
   const { userProfile, theme, toggleTheme, resetAllData, logout, user } = useAppState();
   const c = Colors[theme];
   const isDark = theme === 'dark';
+
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    const loadKey = async () => {
+      try {
+        const key = await AsyncStorage.getItem('@bulk_gemini_api_key');
+        if (key) {
+          setGeminiApiKey(key);
+          setIsSaved(true);
+        }
+      } catch (err) {
+        console.error('Failed to load Gemini key', err);
+      }
+    };
+    loadKey();
+  }, []);
+
+  const saveGeminiKey = async () => {
+    try {
+      if (geminiApiKey.trim()) {
+        await AsyncStorage.setItem('@bulk_gemini_api_key', geminiApiKey.trim());
+        setIsSaved(true);
+        Alert.alert('Sukses', 'Gemini API Key berhasil disimpan!');
+      } else {
+        await AsyncStorage.removeItem('@bulk_gemini_api_key');
+        setIsSaved(false);
+        Alert.alert('Sukses', 'Gemini API Key dihapus.');
+      }
+    } catch (err) {
+      console.error('Failed to save Gemini key', err);
+      Alert.alert('Gagal', 'Gagal menyimpan API Key.');
+    }
+  };
 
   const handleReset = () => {
     Alert.alert(
@@ -221,6 +257,89 @@ export default function SettingsScreen() {
             </View>
           </View>
         )}
+
+        {/* ── Gemini API Key Card ── */}
+        <View style={{
+          borderRadius: 24,
+          backgroundColor: c.surface,
+          borderWidth: 1,
+          borderColor: isSaved ? Accent.glow : c.border,
+          padding: 24,
+          marginBottom: 16,
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <Sparkles color={Accent.primary} size={20} />
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: 14,
+                fontFamily: 'Outfit_600SemiBold',
+                color: c.text,
+                letterSpacing: -0.1,
+              }}>
+                Google Gemini API Key
+              </Text>
+              <Text style={{
+                fontSize: 11,
+                fontFamily: 'Outfit_500Medium',
+                color: c.textMuted,
+                marginTop: 2,
+              }}>
+                Untuk fitur scan foto makanan AI real-time
+              </Text>
+            </View>
+          </View>
+
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: c.surface2,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: c.border,
+            paddingHorizontal: 12,
+            marginBottom: 12,
+          }}>
+            <Key size={16} color={c.textMuted} style={{ marginRight: 8 }} />
+            <TextInput
+              placeholder="Masukkan API Key Gemini..."
+              placeholderTextColor={c.textMuted}
+              value={geminiApiKey}
+              onChangeText={(val) => {
+                setGeminiApiKey(val);
+                setIsSaved(false);
+              }}
+              secureTextEntry={true}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                fontSize: 13,
+                fontFamily: 'Outfit_500Medium',
+                color: c.text,
+              }}
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={saveGeminiKey}
+            style={{
+              paddingVertical: 12,
+              borderRadius: 12,
+              backgroundColor: isSaved ? 'transparent' : Accent.primary,
+              borderWidth: 1,
+              borderColor: Accent.primary,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{
+              fontSize: 13,
+              fontFamily: 'Outfit_600SemiBold',
+              color: isSaved ? Accent.primary : '#FFF',
+            }}>
+              {isSaved ? 'Tersimpan (Klik untuk hapus/ubah)' : 'Simpan API Key'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* ── Logout Button ── */}
         <View>
