@@ -3,7 +3,8 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppStateProvider, useAppState } from '@/hooks/useAppState';
 import { useFonts, Outfit_300Light, Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold, Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
-import { Platform, useWindowDimensions } from 'react-native';
+import { Platform, useWindowDimensions, View, Text, Pressable, Image, StyleSheet } from 'react-native';
+import { Colors, Accent } from '@/constants/theme';
 import '../global.css';
 
 function AppLayoutContent() {
@@ -70,159 +71,324 @@ function AppLayoutContent() {
     }
   };
 
+  const c = Colors[theme];
   const isLargeScreen = Platform.OS === 'web' && width >= 1024;
 
   const appContent = (
-    <>
+    <View style={[styles.phoneScreen, { backgroundColor: c.bg }]}>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(onboarding)" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
       </Stack>
-    </>
+    </View>
   );
 
   if (isLargeScreen) {
     return (
-      <div className="desktop-layout">
-        {/* Left Side: Marketing and PWA Installation Focus */}
-        <div className="desktop-left">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-            <img 
-              src="/icons/icon-192.png" 
-              alt="BULK Logo" 
-              style={{ width: 64, height: 64, borderRadius: 16, boxShadow: '0 8px 16px rgba(255, 107, 0, 0.2)' }} 
+      <View style={styles.desktopLayout}>
+        {/* Left Column: Branding and PWA Install */}
+        <View style={styles.desktopLeft}>
+          {/* Logo Header */}
+          <View style={styles.logoHeader}>
+            <Image 
+              source={require('@/assets/images/icon.png')} 
+              style={styles.logoImage} 
             />
-            <div>
-              <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: -1, color: '#FFFFFF', fontFamily: 'Outfit_800ExtraBold' }}>
-                BULK
-              </h1>
-              <p style={{ fontSize: 14, fontWeight: 600, margin: 0, color: '#FF6B00', letterSpacing: 0.5, textTransform: 'uppercase', fontFamily: 'Outfit_600SemiBold' }}>
-                AI Nutrition Tracker
-              </p>
-            </div>
-          </div>
+            <View>
+              <Text style={styles.brandTitle}>BULK</Text>
+              <Text style={styles.brandSubtitle}>AI Nutrition Tracker</Text>
+            </View>
+          </View>
 
-          <h2 style={{ fontSize: 40, fontWeight: 800, lineHeight: 1.15, letterSpacing: -1.2, marginBottom: 16, color: '#FFFFFF', fontFamily: 'Outfit_800ExtraBold' }}>
-            Kesehatan & Nutrisi,<br />
-            <span style={{ color: '#FF6B00' }}>Terotomatisasi dengan AI.</span>
-          </h2>
+          {/* Tagline */}
+          <Text style={styles.tagline}>
+            Kesehatan & Nutrisi,{'\n'}
+            <Text style={{ color: Accent.primary }}>Terotomatisasi dengan AI.</Text>
+          </Text>
 
-          <p style={{ fontSize: 16, color: '#A0A0A5', lineHeight: 1.6, marginBottom: 32, fontFamily: 'Outfit_500Medium' }}>
+          {/* Description */}
+          <Text style={styles.description}>
             BULK adalah aplikasi pelacak porsi makanan dan kalori modern berbasis kecerdasan buatan. Scan makanan Anda lewat kamera atau barcode, hitung kebutuhan kalori harian secara akurat, dan simpan data Anda secara offline kapan saja.
-          </p>
+          </Text>
 
-          {/* Action Button Card */}
-          <div style={{ 
-            backgroundColor: '#161618', 
-            borderRadius: 24, 
-            padding: 24, 
-            border: '1px solid #242426',
-            marginBottom: 40,
-            boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
-          }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0', color: '#FFFFFF', fontFamily: 'Outfit_700Bold' }}>
-              Unduh Aplikasi Offline (PWA)
-            </h3>
-            <p style={{ fontSize: 13, color: '#A0A0A5', margin: '0 0 20px 0', lineHeight: 1.4, fontFamily: 'Outfit_500Medium' }}>
+          {/* Install Card */}
+          <View style={styles.installCard}>
+            <Text style={styles.cardTitle}>Unduh Aplikasi Offline (PWA)</Text>
+            <Text style={styles.cardDesc}>
               Instal aplikasi ini langsung ke HP atau komputer Anda untuk menikmati akses instan, loading super cepat, dan penggunaan offline penuh tanpa internet.
-            </p>
+            </Text>
 
             {isInstalled ? (
-              <div style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: 8, 
-                backgroundColor: 'rgba(16, 185, 129, 0.1)', 
-                border: '1px solid rgba(16, 185, 129, 0.2)', 
-                padding: '12px 20px', 
-                borderRadius: 12,
-                color: '#10B981',
-                fontWeight: 600,
-                fontSize: 14,
-                fontFamily: 'Outfit_600SemiBold'
-              }}>
-                ✓ Aplikasi Siap Digunakan Secara Offline
-              </div>
+              <View style={styles.installedBadge}>
+                <Text style={styles.installedText}>✓ Aplikasi Siap Digunakan Secara Offline</Text>
+              </View>
             ) : (
-              <button 
-                onClick={handleInstallClick}
-                style={{ 
-                  backgroundColor: '#FF6B00', 
-                  color: '#FFFFFF', 
-                  border: 'none', 
-                  padding: '14px 28px', 
-                  borderRadius: 14, 
-                  fontWeight: 700, 
-                  fontSize: 15, 
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  boxShadow: '0 8px 24px rgba(255, 107, 0, 0.25)',
-                  transition: 'transform 0.2s, background-color 0.2s',
-                  fontFamily: 'Outfit_700Bold'
-                }}
-                onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#FF8224'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#FF6B00'; e.currentTarget.style.transform = 'none'; }}
+              <Pressable 
+                onPress={handleInstallClick}
+                style={({ pressed }) => [
+                  styles.installButton,
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+                ]}
               >
-                📥 Install Aplikasi Sekarang
-              </button>
+                <Text style={styles.installButtonText}>📥 Install Aplikasi Sekarang</Text>
+              </Pressable>
             )}
 
-            <div style={{ marginTop: 16, fontSize: 11, color: '#707075', lineHeight: 1.4, fontFamily: 'Outfit_500Medium' }}>
-              * Jika tombol tidak merespon, buka menu browser Anda (titik tiga di kanan atas) dan klik <strong>"Instal Aplikasi"</strong> atau <strong>"Tambahkan ke layar utama"</strong>.
-            </div>
-          </div>
+            <Text style={styles.installNote}>
+              * Jika tombol tidak merespon, buka menu browser Anda (titik tiga di kanan atas) dan klik "Instal Aplikasi" atau "Tambahkan ke layar utama".
+            </Text>
+          </View>
 
-          {/* Features Checklist */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <span style={{ color: '#FF6B00', fontWeight: 'bold' }}>📸</span>
-              <div>
-                <h4 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px 0', color: '#FFFFFF', fontFamily: 'Outfit_700Bold' }}>AI Food Scan</h4>
-                <p style={{ fontSize: 12, color: '#707075', margin: 0, fontFamily: 'Outfit_500Medium' }}>Ambil foto makanan dan dapatkan detail kalori instan.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <span style={{ color: '#FF6B00', fontWeight: 'bold' }}>📴</span>
-              <div>
-                <h4 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px 0', color: '#FFFFFF', fontFamily: 'Outfit_700Bold' }}>100% Offline</h4>
-                <p style={{ fontSize: 12, color: '#707075', margin: 0, fontFamily: 'Outfit_500Medium' }}>Bekerja tanpa koneksi internet setelah di-install.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <span style={{ color: '#FF6B00', fontWeight: 'bold' }}>⚡</span>
-              <div>
-                <h4 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px 0', color: '#FFFFFF', fontFamily: 'Outfit_700Bold' }}>Macro Tracker</h4>
-                <p style={{ fontSize: 12, color: '#707075', margin: 0, fontFamily: 'Outfit_500Medium' }}>Lacak Protein, Karbohidrat, Lemak, dan Air Minum harian.</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <span style={{ color: '#FF6B00', fontWeight: 'bold' }}>📈</span>
-              <div>
-                <h4 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px 0', color: '#FFFFFF', fontFamily: 'Outfit_700Bold' }}>Grafik Kemajuan</h4>
-                <p style={{ fontSize: 12, color: '#707075', margin: 0, fontFamily: 'Outfit_500Medium' }}>Lihat statistik berat badan dan asupan kalori Anda.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+          {/* Features Grid */}
+          <View style={styles.featuresGrid}>
+            <View style={styles.featureItem}>
+              <Text style={styles.featureIcon}>📸</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.featureTitle}>AI Food Scan</Text>
+                <Text style={styles.featureDesc}>Ambil foto makanan dan dapatkan detail kalori instan.</Text>
+              </View>
+            </View>
 
-        {/* Right Side: Fully Interactive Phone Mockup */}
-        <div className="desktop-right">
-          <div className="phone-mockup">
-            <div className="phone-notch"></div>
-            <div className="phone-screen">
-              {appContent}
-            </div>
-          </div>
-        </div>
-      </div>
+            <View style={styles.featureItem}>
+              <Text style={styles.featureIcon}>📴</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.featureTitle}>100% Offline</Text>
+                <Text style={styles.featureDesc}>Bekerja tanpa koneksi internet setelah di-install.</Text>
+              </View>
+            </View>
+
+            <View style={styles.featureItem}>
+              <Text style={styles.featureIcon}>⚡</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.featureTitle}>Macro Tracker</Text>
+                <Text style={styles.featureDesc}>Lacak Protein, Karbohidrat, Lemak, dan Air Minum harian.</Text>
+              </View>
+            </View>
+
+            <View style={styles.featureItem}>
+              <Text style={styles.featureIcon}>📈</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.featureTitle}>Grafik Kemajuan</Text>
+                <Text style={styles.featureDesc}>Lihat statistik berat badan dan asupan kalori Anda.</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Right Column: Centered Realistic Phone Mockup */}
+        <View style={styles.desktopRight}>
+          <View style={styles.phoneMockup}>
+            {/* Camera / Speaker Notch */}
+            <View style={styles.phoneNotch} />
+            
+            {/* App Screen inside phone mockup */}
+            {appContent}
+          </View>
+        </View>
+      </View>
     );
   }
 
   return appContent;
 }
+
+const styles = StyleSheet.create({
+  desktopLayout: {
+    flexDirection: 'row',
+    width: '100%',
+    height: '100%',
+    minHeight: '100vh',
+    backgroundColor: '#0B0B0C',
+    overflow: 'hidden',
+  },
+  desktopLeft: {
+    flex: 1.2,
+    paddingHorizontal: 64,
+    paddingVertical: 48,
+    justifyContent: 'center',
+    maxWidth: 680,
+  },
+  desktopRight: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    ...Platform.select({
+      web: {
+        backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(255, 107, 0, 0.08) 0%, rgba(11, 11, 12, 0) 70%)',
+      }
+    }),
+  },
+  logoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 32,
+  },
+  logoImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 16px rgba(255, 107, 0, 0.2)',
+      }
+    }),
+  },
+  brandTitle: {
+    fontSize: 32,
+    fontFamily: 'Outfit_800ExtraBold',
+    color: '#FFFFFF',
+    letterSpacing: -1,
+  },
+  brandSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Outfit_600SemiBold',
+    color: '#FF6B00',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  tagline: {
+    fontSize: 36,
+    fontFamily: 'Outfit_800ExtraBold',
+    color: '#FFFFFF',
+    lineHeight: 42,
+    letterSpacing: -1,
+    marginBottom: 16,
+  },
+  description: {
+    fontSize: 15,
+    fontFamily: 'Outfit_500Medium',
+    color: '#A0A0A5',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  installCard: {
+    backgroundColor: '#161618',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#242426',
+    marginBottom: 40,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+      }
+    }),
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontFamily: 'Outfit_700Bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  cardDesc: {
+    fontSize: 13,
+    fontFamily: 'Outfit_500Medium',
+    color: '#A0A0A5',
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  installedBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
+  installedText: {
+    color: '#10B981',
+    fontFamily: 'Outfit_600SemiBold',
+    fontSize: 14,
+  },
+  installButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FF6B00',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 14,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 24px rgba(255, 107, 0, 0.25)',
+        transition: 'all 0.2s ease',
+      }
+    }),
+  },
+  installButtonText: {
+    color: '#FFFFFF',
+    fontFamily: 'Outfit_700Bold',
+    fontSize: 15,
+  },
+  installNote: {
+    marginTop: 16,
+    fontSize: 11,
+    fontFamily: 'Outfit_500Medium',
+    color: '#707075',
+    lineHeight: 14,
+  },
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  featureItem: {
+    width: '47%',
+    flexDirection: 'row',
+    gap: 12,
+  },
+  featureIcon: {
+    fontSize: 20,
+  },
+  featureTitle: {
+    fontSize: 14,
+    fontFamily: 'Outfit_700Bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  featureDesc: {
+    fontSize: 12,
+    fontFamily: 'Outfit_500Medium',
+    color: '#707075',
+    lineHeight: 16,
+  },
+  phoneMockup: {
+    width: 360,
+    height: 740,
+    backgroundColor: '#0B0B0C',
+    borderRadius: 44,
+    borderWidth: 10,
+    borderColor: '#242426',
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 3px #1a1a1b, inset 0 0 12px rgba(0, 0, 0, 0.8)',
+      }
+    }),
+  },
+  phoneNotch: {
+    position: 'absolute',
+    top: 0,
+    left: '50%',
+    marginLeft: -55,
+    width: 110,
+    height: 24,
+    backgroundColor: '#242426',
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
+    zIndex: 9999,
+  },
+  phoneScreen: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    borderRadius: 34,
+    overflow: 'hidden',
+  },
+});
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -244,3 +410,4 @@ export default function RootLayout() {
     </AppStateProvider>
   );
 }
+
