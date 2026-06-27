@@ -7,6 +7,7 @@ import {
   Image,
   StyleSheet,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 
 const O = '#FF6B00';
@@ -169,6 +170,8 @@ interface Props {
 }
 
 export default function DesktopLandingPage({ appContent, onInstallClick, isInstalled }: Props) {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 1024;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [useTransition, setUseTransition] = useState(true);
 
@@ -195,19 +198,12 @@ export default function DesktopLandingPage({ appContent, onInstallClick, isInsta
     <ScrollView style={s.root} showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContainer}>
 
       {/* ── Header ── */}
-      <View style={s.header}>
+      <View style={[s.header, isMobile && { paddingHorizontal: 20, paddingVertical: 16 }]}>
         <View style={s.headerLeft}>
           <Image source={require('@/assets/images/icon.png')} style={s.logoIcon} />
-          <View>
-            <Text style={s.logoText}>BULK</Text>
-            <Text style={s.logoSub}>ENGINE V1.0</Text>
-          </View>
+          <Text style={s.logoText}>BULK</Text>
         </View>
         <View style={s.headerRight}>
-          <View style={s.statusBadge}>
-            <View style={s.statusDot} />
-            <Text style={s.statusText}>OFFLINE READY</Text>
-          </View>
           <Pressable
             onPress={onInstallClick}
             style={({ pressed }) => [s.navBtn, pressed && { opacity: 0.8 }]}
@@ -218,24 +214,21 @@ export default function DesktopLandingPage({ appContent, onInstallClick, isInsta
       </View>
 
       {/* ── Main Hero Area (Asymmetrical Grid-Split) ── */}
-      <View style={s.heroGrid}>
+      <View style={[s.heroGrid, isMobile && { flexDirection: 'column', paddingHorizontal: 20, paddingVertical: 32, gap: 32 }]}>
         
         {/* Left Column: Bold Typographic Pitch & System Info */}
-        <View style={s.heroMain}>
-          <View style={s.systemInfo}>
-            <Text style={s.systemInfoText}>[ APP PROTOCOL / PUBLIC STABLE ]</Text>
-          </View>
+        <View style={[s.heroMain, isMobile && { flex: undefined }]}>
 
-          <Text style={s.mainHeadline}>
+          <Text style={[s.mainHeadline, isMobile && { fontSize: 34, lineHeight: 40, letterSpacing: -1, marginBottom: 16 }]}>
             NUTRISI.<Text style={{ color: O }}>{'\n'}TANPA CLOUD.</Text>{'\n'}100% LOKAL.
           </Text>
 
-          <Text style={s.mainSubhead}>
+          <Text style={[s.mainSubhead, isMobile && { fontSize: 13, lineHeight: 20, marginBottom: 20 }]}>
             Sistem pelacakan kalori mandiri dengan asisten kecerdasan buatan. Berjalan sepenuhnya di peramban, bebas pelacakan data, dan dapat dioperasikan secara luring setelah proses instalasi.
           </Text>
 
           {/* Installation Terminal Panel */}
-          <View style={s.installTerminal}>
+          <View style={[s.installTerminal, isMobile && { marginBottom: 20 }]}>
             <View style={s.terminalHeader}>
               <View style={s.terminalButtons}>
                 <View style={[s.terminalBtnCircle, { backgroundColor: '#FF5F56' }]} />
@@ -250,22 +243,41 @@ export default function DesktopLandingPage({ appContent, onInstallClick, isInsta
               <Text style={[s.terminalLine, { color: O, marginVertical: 8 }]}>
                 &gt;&gt; Ready to mount Web App to local workstation
               </Text>
-              <Pressable
-                onPress={onInstallClick}
-                style={({ pressed }) => [s.terminalCTA, pressed && { opacity: 0.9, transform: [{ translateY: 1 }] }]}
-              >
-                <Text style={s.terminalCTAText}>
-                  {isInstalled ? 'APLIKASI SUDAH TERPASANG' : 'INISIASI INSTALASI SEKARANG'}
-                </Text>
-              </Pressable>
+              
+              <View style={{ gap: 8, marginTop: 8 }}>
+                <Pressable
+                  onPress={onInstallClick}
+                  style={({ pressed }) => [s.terminalCTA, pressed && { opacity: 0.9, transform: [{ translateY: 1 }] }]}
+                >
+                  <Text style={s.terminalCTAText}>
+                    {isInstalled ? 'APLIKASI SUDAH TERPASANG' : 'INISIASI INSTALASI SEKARANG'}
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    if (Platform.OS === 'web') {
+                      window.open('https://bulk-app-daffs26.vercel.app/', '_blank');
+                    }
+                  }}
+                  style={({ pressed }) => [
+                    s.terminalCTA,
+                    { backgroundColor: 'transparent', borderWidth: 1, borderColor: O, marginTop: 0 },
+                    pressed && { opacity: 0.8 }
+                  ]}
+                >
+                  <Text style={[s.terminalCTAText, { color: O }]}>
+                    JALANKAN DI BROWSER
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-
 
         </View>
 
         {/* Right Column: Device Viewport with Infinite Auto Slider */}
-        <View style={s.heroVisual}>
+        <View style={[s.heroVisual, isMobile && { flex: undefined, minHeight: 480 }]}>
           
           {/* Phone Shell Wrap */}
           <View style={s.mockupWrapper}>
@@ -305,8 +317,8 @@ export default function DesktopLandingPage({ appContent, onInstallClick, isInsta
       </View>
 
       {/* ── Asymmetrical Features Section (No generic grid cards) ── */}
-      <View style={s.featuresSection}>
-        <View style={s.featLeftPane}>
+      <View style={[s.featuresSection, isMobile && { flexDirection: 'column', paddingHorizontal: 20, paddingVertical: 40, gap: 32 }]}>
+        <View style={[s.featLeftPane, isMobile && { flex: undefined }]}>
           <Text style={s.featSectionLabel}>PENGALAMAN PREMIUM</Text>
           <Text style={s.featSectionTitle}>Asisten Nutrisi Terbaik Anda</Text>
           <Text style={s.featSectionDesc}>
@@ -314,7 +326,7 @@ export default function DesktopLandingPage({ appContent, onInstallClick, isInsta
           </Text>
         </View>
         
-        <View style={s.featRightPane}>
+        <View style={[s.featRightPane, isMobile && { flex: undefined }]}>
           {FEATURES.map((item) => (
             <View key={item.id} style={s.featRow}>
               <View style={s.featRowLeft}>
@@ -331,7 +343,7 @@ export default function DesktopLandingPage({ appContent, onInstallClick, isInsta
       </View>
 
       {/* ── Footer ── */}
-      <View style={s.footer}>
+      <View style={[s.footer, isMobile && { flexDirection: 'column', gap: 16, paddingHorizontal: 20, alignItems: 'center' }]}>
         <View style={s.footerLeft}>
           <Image source={require('@/assets/images/icon.png')} style={s.footerIcon} />
           <Text style={s.footerBrandText}>BULK · AI NUTRITION ENGINE</Text>

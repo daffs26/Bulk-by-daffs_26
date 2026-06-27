@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bulk-app-daffs26.vercel.app/sitemap.xml
+Sitemap: https://bulk-website-daffs26.vercel.app/sitemap.xml

@@ -20,15 +20,28 @@ export default function Html({ children }: { children: React.ReactNode }) {
         <meta name="keywords" content="kalori tracker, macro tracker, AI nutrition, scan makanan, BMI, TDEE, bulking, cutting, diet, fitness app" />
         <meta name="author" content="daffs_26" />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://bulk-app-daffs26.vercel.app/" />
+        <link rel="canonical" href="https://bulk-website-daffs26.vercel.app/" />
         <meta name="google-site-verification" content="yk8gedAGB76Tmb_6Wmrv1qzKdw4ckK86hRQCGbVVx7Q" />
+
+        {/* ── Google Analytics 4 (GA4) ── */}
+        {process.env.EXPO_PUBLIC_GA_MEASUREMENT_ID && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.EXPO_PUBLIC_GA_MEASUREMENT_ID}`} />
+            <script dangerouslySetInnerHTML={{ __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${process.env.EXPO_PUBLIC_GA_MEASUREMENT_ID}');
+            `}} />
+          </>
+        )}
 
         {/* ── Open Graph / Facebook / WhatsApp ── */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://bulk-app-daffs26.vercel.app/" />
+        <meta property="og:url" content="https://bulk-website-daffs26.vercel.app/" />
         <meta property="og:title" content="BULK — AI Calorie & Macro Tracker" />
         <meta property="og:description" content="Scan makanan, hitung kalori & makro otomatis dengan AI. Raih target berat badan ideal kamu bersama BULK." />
-        <meta property="og:image" content="https://bulk-app-daffs26.vercel.app/icons/icon-512.png" />
+        <meta property="og:image" content="https://bulk-website-daffs26.vercel.app/icons/icon-512.png" />
         <meta property="og:image:width" content="512" />
         <meta property="og:image:height" content="512" />
         <meta property="og:site_name" content="BULK" />
@@ -36,10 +49,10 @@ export default function Html({ children }: { children: React.ReactNode }) {
 
         {/* ── Twitter / X Card ── */}
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:url" content="https://bulk-app-daffs26.vercel.app/" />
+        <meta name="twitter:url" content="https://bulk-website-daffs26.vercel.app/" />
         <meta name="twitter:title" content="BULK — AI Calorie & Macro Tracker" />
         <meta name="twitter:description" content="Scan makanan, hitung kalori & makro otomatis dengan AI. Raih target berat badan ideal kamu bersama BULK." />
-        <meta name="twitter:image" content="https://bulk-app-daffs26.vercel.app/icons/icon-512.png" />
+        <meta name="twitter:image" content="https://bulk-website-daffs26.vercel.app/icons/icon-512.png" />
         <meta name="twitter:creator" content="@daffs_26" />
 
         {/* ── PWA Manifest ── */}
@@ -65,13 +78,13 @@ export default function Html({ children }: { children: React.ReactNode }) {
           "@context": "https://schema.org",
           "@type": "WebApplication",
           "name": "BULK",
-          "description": "BULK adalah aplikasi pelacak kalori dan makro berbasis AI. Scan makanan lewat foto atau barcode, hitung TDEE & BMI otomatis.",
-          "url": "https://bulk-app-daffs26.vercel.app/",
+          "description": "BULK adalah aplikasi pelacak kalori dan makro berbasis AI. Scan makanan lewat foto or barcode, hitung TDEE & BMI otomatis.",
+          "url": "https://bulk-website-daffs26.vercel.app/",
           "applicationCategory": "HealthApplication",
           "operatingSystem": "Web, iOS, Android",
           "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
           "author": { "@type": "Person", "name": "daffs_26" },
-          "image": "https://bulk-app-daffs26.vercel.app/icons/icon-512.png",
+          "image": "https://bulk-website-daffs26.vercel.app/icons/icon-512.png",
           "inLanguage": "id-ID"
         })}} />
 

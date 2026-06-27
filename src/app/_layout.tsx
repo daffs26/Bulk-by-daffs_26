@@ -83,8 +83,22 @@ function AppLayoutContent() {
     }
   };
 
+  const isWeb = Platform.OS === 'web';
+  const hostname = isWeb ? window.location.hostname : '';
+
   const c = Colors[theme];
-  const isLargeScreen = Platform.OS === 'web' && width >= 1024;
+
+  // Determine showing landing page or app
+  let showLandingPage = false;
+  if (isWeb) {
+    if (hostname.includes('bulk-app')) {
+      showLandingPage = false; // Always app on app domain
+    } else if (hostname.includes('bulk-website')) {
+      showLandingPage = true; // Always landing page on website domain
+    } else {
+      showLandingPage = width >= 1024; // Localhost/other domains fallback
+    }
+  }
 
   /* ── The actual mobile app (rendered inside phone mockup on desktop, or full-screen on mobile) ── */
   const appContent = (
@@ -97,7 +111,7 @@ function AppLayoutContent() {
     </View>
   );
 
-  if (isLargeScreen) {
+  if (showLandingPage) {
     return (
       <View style={s.desktopRoot}>
         <DesktopLandingPage
