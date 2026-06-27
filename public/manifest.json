@@ -1,21 +1,51 @@
 {
   "short_name": "BULK",
-  "name": "BULK - Personal AI Portion & Macro Tracker",
+  "name": "BULK — AI Calorie & Macro Tracker",
+  "description": "Scan makanan, hitung kalori & makro otomatis dengan AI. Raih target berat badan ideal kamu.",
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "BULK — AI Calorie & Macro Tracker"
     }
   ],
   "start_url": "/",
+  "scope": "/",
   "background_color": "#0B0B0C",
   "theme_color": "#FF6B00",
   "display": "standalone",
-  "orientation": "portrait"
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "categories": ["health", "fitness", "food"],
+  "lang": "id",
+  "id": "bulk-app-daffs26",
+  "prefer_related_applications": false
 }
