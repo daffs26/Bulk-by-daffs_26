@@ -16,6 +16,7 @@ export default function Html({ children }: { children: React.ReactNode }) {
         <meta name="author" content="daffs_26" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://bulk-app-daffs26.vercel.app/" />
+        <meta name="google-site-verification" content="yk8gedAGB76Tmb_6Wmrv1qzKdw4ckK86hRQCGbVVx7Q" />
 
         {/* ── Open Graph / Facebook / WhatsApp ── */}
         <meta property="og:type" content="website" />
