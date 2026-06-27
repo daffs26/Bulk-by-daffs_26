@@ -57,15 +57,15 @@ export const Semantic = {
 /* ── Typography ── */
 export const Fonts = Platform.select({
   ios: {
-    sans: 'Outfit',
+    sans: 'Poppins',
     serif: 'ui-serif',
     rounded: 'ui-rounded',
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'Outfit',
+    sans: 'Poppins',
     serif: 'serif',
-    rounded: 'Outfit',
+    rounded: 'Poppins',
     mono: 'monospace',
   },
   web: {

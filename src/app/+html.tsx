@@ -8,6 +8,11 @@ export default function Html({ children }: { children: React.ReactNode }) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
+        {/* ── Poppins Font Fallback ── */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
         {/* ── Primary SEO Meta Tags ── */}
         <title>BULK — AI Calorie & Macro Tracker</title>
         <meta name="title" content="BULK — AI Calorie & Macro Tracker" />
@@ -50,10 +55,10 @@ export default function Html({ children }: { children: React.ReactNode }) {
         <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
 
         {/* ── Favicon ── */}
-        <link rel="icon" href="https://bulk-app-daffs26.vercel.app/favicon.ico" type="image/x-icon" />
-        <link rel="shortcut icon" href="https://bulk-app-daffs26.vercel.app/favicon.ico" type="image/x-icon" />
-        <link rel="icon" type="image/png" sizes="192x192" href="https://bulk-app-daffs26.vercel.app/icons/icon-192.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="https://bulk-app-daffs26.vercel.app/icons/icon-512.png" />
+        <link rel="icon" href="/favicon.ico?v=3" type="image/x-icon" />
+        <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
 
         {/* ── JSON-LD Structured Data (Google understands this) ── */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

@@ -4,13 +4,13 @@ import { StatusBar } from 'expo-status-bar';
 import { AppStateProvider, useAppState } from '@/hooks/useAppState';
 import {
   useFonts,
-  Outfit_300Light,
-  Outfit_400Regular,
-  Outfit_500Medium,
-  Outfit_600SemiBold,
-  Outfit_700Bold,
-  Outfit_800ExtraBold,
-} from '@expo-google-fonts/outfit';
+  Poppins_300Light,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+} from '@expo-google-fonts/poppins';
 import { Platform, useWindowDimensions, View, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/theme';
 import DesktopLandingPage from '@/components/DesktopLandingPage';
@@ -127,12 +127,21 @@ const s = StyleSheet.create({
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Outfit_300Light,
-    Outfit_400Regular,
-    Outfit_500Medium,
-    Outfit_600SemiBold,
-    Outfit_700Bold,
-    Outfit_800ExtraBold,
+    // Load Poppins under Outfit aliases so we don't have to rename hundreds of font family references
+    Outfit_300Light: Poppins_300Light,
+    Outfit_400Regular: Poppins_400Regular,
+    Outfit_500Medium: Poppins_500Medium,
+    Outfit_600SemiBold: Poppins_600SemiBold,
+    Outfit_700Bold: Poppins_700Bold,
+    Outfit_800ExtraBold: Poppins_800ExtraBold,
+
+    // Also support actual Poppins names if needed
+    Poppins_300Light,
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
   });
 
   if (!fontsLoaded) return null;

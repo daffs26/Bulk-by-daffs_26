@@ -347,7 +347,7 @@ export default function SettingsScreen() {
             onPress={() => {
               Alert.alert(
                 'Keluar Akun',
-                'Apakah Anda yakin ingin keluar dari akun Google Anda?',
+                'Apakah Anda yakin ingin keluar dari akun Anda?',
                 [
                   { text: 'Batal', style: 'cancel' },
                   { 

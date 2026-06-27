@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,51 +8,59 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { Accent } from '@/constants/theme';
 
 const O = '#FF6B00';
 const BG = '#0B0B0C';
 const BG2 = '#0F0F10';
-const SURF = '#161618';
-const SURF2 = '#1E1E21';
-const BORD = '#242426';
+const SURF = '#141416';
+const SURF2 = '#1A1A1D';
+const BORD = '#222225';
 const TXT = '#FFFFFF';
 const MUTED = '#A0A0A5';
-const DIM = '#505055';
+const DIM = '#4A4A4F';
 
-/* ─── Static Screen Illustrations ─── */
+/* ─── Sleek Static Screen Illustrations (No Emojis, High Contrast) ─── */
 
 function IlluDashboard() {
   return (
-    <View style={{ flex: 1, backgroundColor: BG, padding: 14 }}>
-      <Text style={{ color: MUTED, fontSize: 7.5, fontFamily: 'Outfit_600SemiBold', letterSpacing: 1.2, marginBottom: 2 }}>SELAMAT DATANG</Text>
-      <Text style={{ color: TXT, fontSize: 15, fontFamily: 'Outfit_800ExtraBold', letterSpacing: -0.3, marginBottom: 12 }}>
-        BULK <Text style={{ color: O }}>Dashboard</Text>
+    <View style={{ flex: 1, backgroundColor: BG, padding: 18 }}>
+      <Text style={{ color: MUTED, fontSize: 8, fontFamily: 'Poppins_600SemiBold', letterSpacing: 1.5, marginBottom: 2 }}>STATUS MONITOR</Text>
+      <Text style={{ color: TXT, fontSize: 16, fontFamily: 'Poppins_800ExtraBold', letterSpacing: -0.5, marginBottom: 16 }}>
+        BULK / <Text style={{ color: O }}>CORE</Text>
       </Text>
-      {/* Calorie card */}
-      <View style={{ backgroundColor: O, borderRadius: 16, padding: 14, marginBottom: 8 }}>
-        <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 7.5, fontFamily: 'Outfit_600SemiBold', letterSpacing: 0.8 }}>KALORI HARI INI</Text>
-        <Text style={{ color: TXT, fontSize: 26, fontFamily: 'Outfit_800ExtraBold', lineHeight: 30, marginVertical: 4 }}>1,247</Text>
-        <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 7.5 }}>dari 2,000 kcal target</Text>
-        <View style={{ height: 4, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 2, marginTop: 8 }}>
-          <View style={{ height: 4, width: '62%', backgroundColor: TXT, borderRadius: 2 }} />
+      
+      {/* Calorie Progress Ring/Card */}
+      <View style={{ backgroundColor: SURF, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: BORD, marginBottom: 12 }}>
+        <Text style={{ color: MUTED, fontSize: 8, fontFamily: 'Poppins_600SemiBold', letterSpacing: 1 }}>ENERGI HARIAN</Text>
+        <Text style={{ color: TXT, fontSize: 28, fontFamily: 'Poppins_800ExtraBold', marginVertical: 4 }}>1,247 <Text style={{ fontSize: 12, color: DIM }}>kcal</Text></Text>
+        <View style={{ height: 3, backgroundColor: '#222', borderRadius: 1.5, marginTop: 10, overflow: 'hidden' }}>
+          <View style={{ height: 3, width: '62%', backgroundColor: O, borderRadius: 1.5 }} />
         </View>
+        <Text style={{ color: DIM, fontSize: 7.5, marginTop: 8 }}>Target harian: 2,000 kcal · Sisa 753 kcal</Text>
       </View>
-      {/* Macro row */}
-      <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
-        {[['Protein', '87g', O], ['Karbo', '142g', '#3B82F6'], ['Lemak', '45g', '#10B981']] .map(([l, v, c]) => (
-          <View key={l} style={{ flex: 1, backgroundColor: SURF, borderRadius: 10, padding: 8 }}>
-            <Text style={{ color: c, fontSize: 12, fontFamily: 'Outfit_700Bold' }}>{v}</Text>
-            <Text style={{ color: DIM, fontSize: 7 }}>{l}</Text>
+
+      {/* Macro Stats */}
+      <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+        {[
+          ['PRO', '87g', O],
+          ['CAR', '142g', '#3B82F6'],
+          ['FAT', '45g', '#10B981']
+        ].map(([label, val, color]) => (
+          <View key={label} style={{ flex: 1, backgroundColor: SURF, borderRadius: 10, padding: 10, borderWidth: 1, borderColor: BORD }}>
+            <Text style={{ color, fontSize: 11, fontFamily: 'Poppins_700Bold' }}>{val}</Text>
+            <Text style={{ color: DIM, fontSize: 7.5, fontFamily: 'Poppins_600SemiBold', marginTop: 2 }}>{label}</Text>
           </View>
         ))}
       </View>
-      {/* Water */}
-      <View style={{ backgroundColor: SURF, borderRadius: 10, padding: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Text style={{ fontSize: 14 }}>💧</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: '#3B82F6', fontSize: 10, fontFamily: 'Outfit_700Bold' }}>1,750 ml</Text>
-          <Text style={{ color: DIM, fontSize: 7 }}>Air Minum · target 2,310 ml</Text>
+
+      {/* Water Tracker */}
+      <View style={{ backgroundColor: SURF, borderRadius: 10, padding: 10, borderWidth: 1, borderColor: BORD, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View>
+          <Text style={{ color: '#3B82F6', fontSize: 11, fontFamily: 'Poppins_700Bold' }}>1,750 ml</Text>
+          <Text style={{ color: DIM, fontSize: 7.5, fontFamily: 'Poppins_600SemiBold', marginTop: 2 }}>HIDRASI / H2O</Text>
+        </View>
+        <View style={{ width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: '#3B82F6', alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#3B82F6' }} />
         </View>
       </View>
     </View>
@@ -61,31 +69,33 @@ function IlluDashboard() {
 
 function IlluFoodLog() {
   const foods = [
-    { name: 'Nasi Putih (200g)', cal: 260 },
-    { name: 'Ayam Bakar', cal: 180 },
-    { name: 'Tahu Goreng', cal: 90 },
-    { name: 'Sayur Bayam', cal: 45 },
+    { name: 'Nasi Putih Premium', cal: 260, qty: '200g' },
+    { name: 'Dada Ayam Panggang', cal: 180, qty: '120g' },
+    { name: 'Tahu Goreng Tepung', cal: 90, qty: '1 pcs' },
+    { name: 'Sayur Bayam Bening', cal: 45, qty: '1 mangkok' },
   ];
   return (
-    <View style={{ flex: 1, backgroundColor: BG, padding: 14 }}>
-      <Text style={{ color: TXT, fontSize: 15, fontFamily: 'Outfit_800ExtraBold', marginBottom: 12 }}>
-        Food <Text style={{ color: O }}>Diary</Text>
+    <View style={{ flex: 1, backgroundColor: BG, padding: 18 }}>
+      <Text style={{ color: TXT, fontSize: 16, fontFamily: 'Poppins_800ExtraBold', letterSpacing: -0.5, marginBottom: 16 }}>
+        JURNAL / <Text style={{ color: O }}>MAKANAN</Text>
       </Text>
+      
       {foods.map((f, i) => (
-        <View key={i} style={{ backgroundColor: SURF, borderRadius: 10, padding: 8, marginBottom: 6, flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ fontSize: 12 }}>🍽️</Text>
-          <View style={{ flex: 1, marginLeft: 8 }}>
-            <Text style={{ color: TXT, fontSize: 9, fontFamily: 'Outfit_600SemiBold' }}>{f.name}</Text>
+        <View key={i} style={{ backgroundColor: SURF, borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: BORD, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <Text style={{ color: TXT, fontSize: 9.5, fontFamily: 'Poppins_600SemiBold' }}>{f.name}</Text>
+            <Text style={{ color: DIM, fontSize: 7.5, marginTop: 2 }}>{f.qty}</Text>
           </View>
-          <Text style={{ color: O, fontSize: 9, fontFamily: 'Outfit_700Bold' }}>{f.cal} kcal</Text>
+          <Text style={{ color: O, fontSize: 11, fontFamily: 'Poppins_700Bold' }}>+{f.cal} <Text style={{ fontSize: 7, color: MUTED }}>kcal</Text></Text>
         </View>
       ))}
+      
       <View style={[{
-        marginTop: 4, backgroundColor: 'rgba(255,107,0,0.06)',
-        borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,107,0,0.2)',
-        padding: 8, alignItems: 'center',
+        marginTop: 4, backgroundColor: 'rgba(255,107,0,0.02)',
+        borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,107,0,0.15)',
+        padding: 10, alignItems: 'center',
       }, Platform.select({ web: { borderStyle: 'dashed' } }) as any]}>
-        <Text style={{ color: O, fontSize: 9, fontFamily: 'Outfit_600SemiBold' }}>+ Tambah Makanan</Text>
+        <Text style={{ color: O, fontSize: 9, fontFamily: 'Poppins_600SemiBold', letterSpacing: 0.5 }}>+ INPUT MAKANAN</Text>
       </View>
     </View>
   );
@@ -95,64 +105,62 @@ function IlluProgress() {
   const bars = [65, 80, 55, 90, 70, 85, 60];
   const days = ['S', 'S', 'R', 'K', 'J', 'S', 'M'];
   return (
-    <View style={{ flex: 1, backgroundColor: BG, padding: 14 }}>
-      <Text style={{ color: TXT, fontSize: 15, fontFamily: 'Outfit_800ExtraBold', marginBottom: 12 }}>
-        Progress <Text style={{ color: O }}>Kamu</Text>
+    <View style={{ flex: 1, backgroundColor: BG, padding: 18 }}>
+      <Text style={{ color: TXT, fontSize: 16, fontFamily: 'Poppins_800ExtraBold', letterSpacing: -0.5, marginBottom: 16 }}>
+        METRIKS / <Text style={{ color: O }}>PROGRES</Text>
       </Text>
-      <View style={{ backgroundColor: SURF, borderRadius: 12, padding: 10, marginBottom: 8 }}>
-        <Text style={{ color: MUTED, fontSize: 7, fontFamily: 'Outfit_600SemiBold', letterSpacing: 0.8, marginBottom: 8 }}>KALORI 7 HARI TERAKHIR</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4, height: 44 }}>
+      
+      <View style={{ backgroundColor: SURF, borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: BORD }}>
+        <Text style={{ color: MUTED, fontSize: 8, fontFamily: 'Poppins_600SemiBold', letterSpacing: 1, marginBottom: 12 }}>RIWAYAT ENERGI HARI H-7</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 48 }}>
           {bars.map((h, i) => (
             <View key={i} style={{ flex: 1, alignItems: 'center' }}>
-              <View style={{ height: (h / 100) * 36, backgroundColor: i === 3 ? O : '#2A2A2E', borderRadius: 3, width: '100%' }} />
-              <Text style={{ color: DIM, fontSize: 6, marginTop: 2 }}>{days[i]}</Text>
+              <View style={{ height: (h / 100) * 38, backgroundColor: i === 3 ? O : '#222', borderRadius: 2, width: '100%' }} />
+              <Text style={{ color: DIM, fontSize: 6.5, marginTop: 4, fontFamily: 'Poppins_600SemiBold' }}>{days[i]}</Text>
             </View>
           ))}
         </View>
       </View>
-      <View style={{ flexDirection: 'row', gap: 6 }}>
-        <View style={{ flex: 1, backgroundColor: SURF, borderRadius: 10, padding: 10 }}>
-          <Text style={{ fontSize: 14, marginBottom: 4 }}>⚖️</Text>
-          <Text style={{ color: TXT, fontSize: 14, fontFamily: 'Outfit_700Bold' }}>68.2 kg</Text>
-          <Text style={{ color: '#10B981', fontSize: 8 }}>↓ 1.8 kg bulan ini</Text>
+
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flex: 1, backgroundColor: SURF, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: BORD }}>
+          <Text style={{ color: MUTED, fontSize: 7.5, fontFamily: 'Poppins_600SemiBold', marginBottom: 2 }}>BERAT BADAN</Text>
+          <Text style={{ color: TXT, fontSize: 14, fontFamily: 'Poppins_700Bold' }}>68.2 kg</Text>
+          <Text style={{ color: '#10B981', fontSize: 8, marginTop: 2 }}>-1.8 kg bulan ini</Text>
         </View>
-        <View style={{ flex: 1, backgroundColor: SURF, borderRadius: 10, padding: 10 }}>
-          <Text style={{ fontSize: 14, marginBottom: 4 }}>🔥</Text>
-          <Text style={{ color: O, fontSize: 14, fontFamily: 'Outfit_700Bold' }}>12 Hari</Text>
-          <Text style={{ color: MUTED, fontSize: 8 }}>Streak aktif</Text>
+        <View style={{ flex: 1, backgroundColor: SURF, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: BORD }}>
+          <Text style={{ color: MUTED, fontSize: 7.5, fontFamily: 'Poppins_600SemiBold', marginBottom: 2 }}>STREAK</Text>
+          <Text style={{ color: O, fontSize: 14, fontFamily: 'Poppins_700Bold' }}>12 HARI</Text>
+          <Text style={{ color: DIM, fontSize: 8, marginTop: 2 }}>Konsisten log</Text>
         </View>
       </View>
     </View>
   );
 }
 
-/* ─── Phone Mockup Container ─── */
+/* ─── Phone Mockup Container (Sleek Notch & Minimal Outlines) ─── */
 
 function PhoneMockup({ children, size = 'md' }: { children: React.ReactNode; size?: 'sm' | 'md' | 'lg' }) {
-  const dims = { sm: { w: 220, h: 448 }, md: { w: 280, h: 572 }, lg: { w: 320, h: 654 } }[size];
+  const dims = { sm: { w: 230, h: 460 }, md: { w: 290, h: 580 }, lg: { w: 330, h: 660 } }[size];
   return (
     <View style={[s.phoneShell, { width: dims.w, height: dims.h }, Platform.select({
-      web: { boxShadow: '0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05), inset 0 0 0 1px rgba(255,255,255,0.03)' }
+      web: { boxShadow: '0 40px 90px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.02)' }
     }) as any]}>
       <View style={s.phoneNotch} />
-      <View style={{ flex: 1, borderRadius: 38, overflow: 'hidden' }}>
+      <View style={{ flex: 1, borderRadius: 36, overflow: 'hidden' }}>
         {children}
       </View>
     </View>
   );
 }
 
-/* ─── Feature Card ─── */
+/* ─── Features Definition ─── */
 const FEATURES = [
-  { emoji: '📸', title: 'AI Photo Recognition', desc: 'Foto makanan kamu dan AI langsung mengidentifikasi kalori, protein, karbo, dan lemaknya secara instan.', accent: O },
-  { emoji: '📊', title: 'Macro Tracker Real-Time', desc: 'Lacak Protein, Karbohidrat, Lemak, dan Air Minum harian dengan visualisasi ring dan bar yang detail.', accent: '#3B82F6' },
-  { emoji: '📱', title: 'Barcode Scanner', desc: 'Scan barcode produk makanan kemasan untuk mendapatkan info nutrisi akurat dari database global.', accent: '#10B981' },
-  { emoji: '🎯', title: 'Custom Fitness Target', desc: 'Kalkulasi BMI & TDEE otomatis. Dapatkan rekomendasi kalori personal berdasarkan goal spesifik kamu.', accent: '#8B5CF6' },
-  { emoji: '📴', title: 'Offline Mode Penuh', desc: 'Install sekali dan pakai tanpa internet. Semua data tersimpan aman dan privat di perangkatmu sendiri.', accent: '#F59E0B' },
-  { emoji: '📈', title: 'Progress Charts', desc: 'Grafik berat badan, tren kalori harian, dan streak kebiasaan makan untuk memonitor perjalananmu.', accent: '#EC4899' },
+  { id: '01', title: 'AI Photo Engine', tag: 'SCAN', desc: 'Identifikasi makanan instan dengan visual recognition langsung dari perangkat.' },
+  { id: '02', title: 'Private Local Storage', tag: 'DATA', desc: '100% data tersimpan lokal. Tidak ada sinkronisasi cloud eksternal jika tidak diinginkan.' },
+  { id: '03', title: 'UPC Barcode Decoder', tag: 'SCAN', desc: 'Scan kode makanan kemasan secara cepat dengan kamera internal.' },
+  { id: '04', title: 'Dynamic Target Calculator', tag: 'CORE', desc: 'Estimasi BMI dan TDEE terintegrasi untuk kalkulasi target kalori ideal.' },
 ];
-
-/* ─── Main Component ─── */
 
 interface Props {
   appContent: React.ReactNode;
@@ -161,277 +169,452 @@ interface Props {
 }
 
 export default function DesktopLandingPage({ appContent, onInstallClick, isInstalled }: Props) {
-  const installBtnLabel = isInstalled ? '✓ Aplikasi Sudah Terinstall' : '📥 Install BULK — Gratis';
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [useTransition, setUseTransition] = useState(true);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setUseTransition(true);
+      setCurrentIndex((prev) => prev + 1);
+    }, 5000); // 5 seconds per slide
+
+    return () => clearInterval(interval);
+  }, []);
+
+  React.useEffect(() => {
+    if (currentIndex === 3) {
+      const timeout = setTimeout(() => {
+        setUseTransition(false);
+        setCurrentIndex(0);
+      }, 600); // Wait for the transition to finish
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex]);
 
   return (
-    <ScrollView style={s.root} showsVerticalScrollIndicator={false}>
+    <ScrollView style={s.root} showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContainer}>
 
-      {/* ── Navbar ── */}
-      <View style={s.nav}>
-        <View style={s.navBrand}>
-          <Image source={require('@/assets/images/icon.png')} style={s.navIcon} />
+      {/* ── Header ── */}
+      <View style={s.header}>
+        <View style={s.headerLeft}>
+          <Image source={require('@/assets/images/icon.png')} style={s.logoIcon} />
           <View>
-            <Text style={s.navTitle}>BULK</Text>
-            <Text style={s.navSub}>AI Nutrition Tracker</Text>
+            <Text style={s.logoText}>BULK</Text>
+            <Text style={s.logoSub}>ENGINE V1.0</Text>
           </View>
         </View>
-        <Pressable
-          onPress={onInstallClick}
-          style={({ pressed }) => [s.navBtn, pressed && { opacity: 0.8 }]}
-        >
-          <Text style={s.navBtnTxt}>{isInstalled ? '✓ Terinstall' : '📥 Install App'}</Text>
-        </Pressable>
-      </View>
-
-      {/* ── Hero ── */}
-      <View style={s.hero}>
-        {/* Glow blob */}
-        <View style={s.heroGlow} />
-
-        <View style={s.heroLeft}>
-          <View style={s.heroBadge}>
-            <Text style={s.heroBadgeTxt}>🔥 AI-Powered · Gratis · Offline</Text>
+        <View style={s.headerRight}>
+          <View style={s.statusBadge}>
+            <View style={s.statusDot} />
+            <Text style={s.statusText}>OFFLINE READY</Text>
           </View>
-
-          <Text style={s.heroH1}>
-            Lacak Kalori &{'\n'}Nutrisi dengan{'\n'}
-            <Text style={{ color: O }}>Kecerdasan AI</Text>
-          </Text>
-
-          <Text style={s.heroDesc}>
-            BULK adalah asisten nutrisi AI yang membantu kamu mencapai target kebugaran — dari scan makanan otomatis, hitung makro, hingga pantau progres harian. Gratis. Offline. Selalu siap.
-          </Text>
-
           <Pressable
             onPress={onInstallClick}
-            style={({ pressed }) => [s.heroCTA, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+            style={({ pressed }) => [s.navBtn, pressed && { opacity: 0.8 }]}
           >
-            <Text style={s.heroCTATxt}>{installBtnLabel}</Text>
+            <Text style={s.navBtnText}>{isInstalled ? 'TERINSTALL' : 'INSTALL APP'}</Text>
           </Pressable>
-
-          <View style={s.heroStats}>
-            {[['100%', 'Gratis'], ['AI', 'Powered'], ['Offline', 'Support']].map(([val, lbl], i) => (
-              <React.Fragment key={i}>
-                {i > 0 && <View style={s.statDivider} />}
-                <View style={s.statItem}>
-                  <Text style={s.statVal}>{val}</Text>
-                  <Text style={s.statLbl}>{lbl}</Text>
-                </View>
-              </React.Fragment>
-            ))}
-          </View>
-        </View>
-
-        <View style={s.heroRight}>
-          <PhoneMockup size="lg">
-            {appContent}
-          </PhoneMockup>
         </View>
       </View>
 
-      {/* ── Features ── */}
-      <View style={s.section}>
-        <View style={s.sectionHead}>
-          <Text style={s.sectionLabel}>FITUR UTAMA</Text>
-          <Text style={s.sectionH2}>Semua yang Kamu Butuhkan{'\n'}untuk Hidup Lebih Sehat</Text>
-          <Text style={s.sectionDesc}>
-            BULK menggabungkan teknologi AI terkini dengan UX yang intuitif agar proses mencapai goal kebugaranmu terasa mudah dan menyenangkan.
+      {/* ── Main Hero Area (Asymmetrical Grid-Split) ── */}
+      <View style={s.heroGrid}>
+        
+        {/* Left Column: Bold Typographic Pitch & System Info */}
+        <View style={s.heroMain}>
+          <View style={s.systemInfo}>
+            <Text style={s.systemInfoText}>[ APP PROTOCOL / PUBLIC STABLE ]</Text>
+          </View>
+
+          <Text style={s.mainHeadline}>
+            NUTRISI.<Text style={{ color: O }}>{'\n'}TANPA CLOUD.</Text>{'\n'}100% LOKAL.
+          </Text>
+
+          <Text style={s.mainSubhead}>
+            Sistem pelacakan kalori mandiri dengan asisten kecerdasan buatan. Berjalan sepenuhnya di peramban, bebas pelacakan data, dan dapat dioperasikan secara luring setelah proses instalasi.
+          </Text>
+
+          {/* Installation Terminal Panel */}
+          <View style={s.installTerminal}>
+            <View style={s.terminalHeader}>
+              <View style={s.terminalButtons}>
+                <View style={[s.terminalBtnCircle, { backgroundColor: '#FF5F56' }]} />
+                <View style={[s.terminalBtnCircle, { backgroundColor: '#FFBD2E' }]} />
+                <View style={[s.terminalBtnCircle, { backgroundColor: '#27C93F' }]} />
+              </View>
+              <Text style={s.terminalTitle}>install_wizard.sh</Text>
+            </View>
+            <View style={s.terminalBody}>
+              <Text style={s.terminalLine}>$ npm install -g bulk-nutrition-tracker</Text>
+              <Text style={s.terminalLine}>$ bulk-cli --mode offline-pwa</Text>
+              <Text style={[s.terminalLine, { color: O, marginVertical: 8 }]}>
+                &gt;&gt; Ready to mount Web App to local workstation
+              </Text>
+              <Pressable
+                onPress={onInstallClick}
+                style={({ pressed }) => [s.terminalCTA, pressed && { opacity: 0.9, transform: [{ translateY: 1 }] }]}
+              >
+                <Text style={s.terminalCTAText}>
+                  {isInstalled ? 'APLIKASI SUDAH TERPASANG' : 'INISIASI INSTALASI SEKARANG'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+
+
+        </View>
+
+        {/* Right Column: Device Viewport with Infinite Auto Slider */}
+        <View style={s.heroVisual}>
+          
+          {/* Phone Shell Wrap */}
+          <View style={s.mockupWrapper}>
+            <PhoneMockup size="lg">
+              <View style={{ flex: 1, overflow: 'hidden', backgroundColor: BG }}>
+                <View style={[
+                  s.slidesWrapper,
+                  {
+                    transform: [
+                      {
+                        translateX: -currentIndex * 310
+                      }
+                    ],
+                    transition: useTransition ? 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
+                  } as any
+                ]}>
+                  <View style={s.slideItem}>
+                    <IlluDashboard />
+                  </View>
+                  <View style={s.slideItem}>
+                    <IlluFoodLog />
+                  </View>
+                  <View style={s.slideItem}>
+                    <IlluProgress />
+                  </View>
+                  {/* Clone of the first slide for seamless loop */}
+                  <View style={s.slideItem}>
+                    <IlluDashboard />
+                  </View>
+                </View>
+              </View>
+            </PhoneMockup>
+          </View>
+
+        </View>
+
+      </View>
+
+      {/* ── Asymmetrical Features Section (No generic grid cards) ── */}
+      <View style={s.featuresSection}>
+        <View style={s.featLeftPane}>
+          <Text style={s.featSectionLabel}>PENGALAMAN PREMIUM</Text>
+          <Text style={s.featSectionTitle}>Asisten Nutrisi Terbaik Anda</Text>
+          <Text style={s.featSectionDesc}>
+            BULK dirancang khusus untuk mempermudah perjalanan kebugaran Anda. Pantau asupan kalori, hitung keseimbangan nutrisi harian, dan raih target tubuh ideal Anda dengan bantuan kecerdasan buatan yang instan dan mudah digunakan.
           </Text>
         </View>
-        <View style={s.featGrid}>
-          {FEATURES.map((f, i) => (
-            <View key={i} style={s.featCard}>
-              <View style={[s.featIconBox, { backgroundColor: f.accent + '22' }]}>
-                <Text style={s.featEmoji}>{f.emoji}</Text>
+        
+        <View style={s.featRightPane}>
+          {FEATURES.map((item) => (
+            <View key={item.id} style={s.featRow}>
+              <View style={s.featRowLeft}>
+                <Text style={s.featId}>{item.id}</Text>
+                <Text style={s.featTag}>[ {item.tag} ]</Text>
               </View>
-              <Text style={s.featTitle}>{f.title}</Text>
-              <Text style={s.featDesc}>{f.desc}</Text>
-              <View style={[s.featAccentLine, { backgroundColor: f.accent }]} />
+              <View style={s.featRowContent}>
+                <Text style={s.featTitle}>{item.title}</Text>
+                <Text style={s.featDesc}>{item.desc}</Text>
+              </View>
             </View>
           ))}
         </View>
       </View>
 
-      {/* ── App Preview ── */}
-      <View style={[s.section, s.previewSection]}>
-        <View style={s.sectionHead}>
-          <Text style={s.sectionLabel}>TAMPILAN MOBILE</Text>
-          <Text style={s.sectionH2}>Dirancang untuk Pengalaman{'\n'}
-            <Text style={{ color: O }}>Mobile yang Sempurna</Text>
-          </Text>
-          <Text style={s.sectionDesc}>
-            Setiap layar dioptimalkan untuk kemudahan penggunaan. Dark mode premium, animasi halus, dan navigasi tab yang intuitif — siap digunakan kapan saja, di mana saja.
-          </Text>
-        </View>
-        <View style={s.previewPhones}>
-          {/* Screen 1: Dashboard */}
-          <View style={s.previewPhoneWrap}>
-            <PhoneMockup size="md">
-              <IlluDashboard />
-            </PhoneMockup>
-            <Text style={s.previewPhoneLabel}>🏠 Dashboard</Text>
-          </View>
-
-          {/* Screen 2: Food Log — center, slightly larger */}
-          <View style={[s.previewPhoneWrap, s.previewPhoneCenter]}>
-            <PhoneMockup size="lg">
-              <IlluFoodLog />
-            </PhoneMockup>
-            <Text style={s.previewPhoneLabel}>📋 Food Diary</Text>
-          </View>
-
-          {/* Screen 3: Progress */}
-          <View style={s.previewPhoneWrap}>
-            <PhoneMockup size="md">
-              <IlluProgress />
-            </PhoneMockup>
-            <Text style={s.previewPhoneLabel}>📈 Progress</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* ── CTA Section ── */}
-      <View style={s.ctaSection}>
-        <View style={s.ctaGlow} />
-        <Image source={require('@/assets/images/icon.png')} style={s.ctaLogo} />
-        <Text style={s.ctaH2}>
-          Mulai Perjalanan Kebugaranmu{'\n'}
-          Sekarang — <Text style={{ color: O }}>Gratis!</Text>
-        </Text>
-        <Text style={s.ctaDesc}>
-          Install BULK sebagai aplikasi di HP atau laptop kamu. Tidak butuh internet setelah install. Tidak ada langganan. Tidak ada iklan. Tidak ada biaya tersembunyi.
-        </Text>
-        <Pressable
-          onPress={onInstallClick}
-          style={({ pressed }) => [s.ctaBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
-        >
-          <Text style={s.ctaBtnTxt}>{installBtnLabel}</Text>
-        </Pressable>
-        <Text style={s.ctaNote}>
-          Tersedia untuk Chrome, Edge, dan semua browser modern. Di iPhone: Safari → Share → "Tambahkan ke Layar Utama"
-        </Text>
-      </View>
-
       {/* ── Footer ── */}
       <View style={s.footer}>
-        <View style={s.footerBrand}>
+        <View style={s.footerLeft}>
           <Image source={require('@/assets/images/icon.png')} style={s.footerIcon} />
-          <Text style={s.footerTitle}>BULK</Text>
+          <Text style={s.footerBrandText}>BULK · AI NUTRITION ENGINE</Text>
         </View>
-        <Text style={s.footerTagline}>AI Nutrition Tracker · by @daffs_26</Text>
-        <Text style={s.footerCopy}>© 2026 BULK. Made with ❤️ in Indonesia.</Text>
+        <Text style={s.footerRights}>@daffs_26</Text>
       </View>
 
     </ScrollView>
   );
 }
 
-/* ─── Styles ─── */
+/* ─── Stylesheet ─── */
 const s = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: BG,
   },
+  scrollContainer: {
+    minHeight: '100%',
+  },
 
-  /* Navbar */
-  nav: {
+  /* Header */
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 64,
-    paddingVertical: 20,
+    paddingHorizontal: 48,
+    paddingVertical: 24,
     borderBottomWidth: 1,
-    borderBottomColor: BORD,
+    borderColor: BORD,
     backgroundColor: BG,
-    ...Platform.select({ web: { position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(20px)', backgroundColor: 'rgba(11,11,12,0.85)' } }) as any,
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        backdropFilter: 'blur(16px)',
+        backgroundColor: 'rgba(11,11,12,0.8)'
+      }
+    }) as any,
   },
-  navBrand: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  navIcon: { width: 40, height: 40, borderRadius: 10 },
-  navTitle: { fontSize: 20, fontFamily: 'Outfit_800ExtraBold', color: TXT, letterSpacing: -0.5 },
-  navSub: { fontSize: 11, fontFamily: 'Outfit_500Medium', color: O, letterSpacing: 0.3 },
-  navBtn: {
-    backgroundColor: O,
-    paddingVertical: 10,
-    paddingHorizontal: 22,
-    borderRadius: 12,
-    ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(255,107,0,0.3)' } }) as any,
-  },
-  navBtnTxt: { color: TXT, fontFamily: 'Outfit_700Bold', fontSize: 14 },
-
-  /* Hero */
-  hero: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 680,
-    paddingHorizontal: 80,
-    paddingVertical: 80,
-    overflow: 'hidden',
-    position: 'relative',
-    gap: 60,
+    gap: 12,
   },
-  heroGlow: {
-    position: 'absolute',
-    top: -200,
-    right: 100,
-    width: 600,
-    height: 600,
-    borderRadius: 300,
-    backgroundColor: 'rgba(255,107,0,0.06)',
-    ...Platform.select({ web: { filter: 'blur(80px)', pointerEvents: 'none' } }) as any,
+  logoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
   },
-  heroLeft: { flex: 1.1, zIndex: 2 },
-  heroRight: { flex: 0.9, alignItems: 'center', zIndex: 2 },
-
-  heroBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,107,0,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,0,0.25)',
+  logoText: {
+    color: TXT,
+    fontSize: 16,
+    fontFamily: 'Poppins_800ExtraBold',
+    letterSpacing: -0.5,
+  },
+  logoSub: {
+    color: O,
+    fontSize: 8,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 1.5,
+    marginTop: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 24,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#111',
     paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 100,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: BORD,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  statusText: {
+    color: MUTED,
+    fontSize: 8.5,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 0.8,
+  },
+  navBtn: {
+    backgroundColor: TXT,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 6,
+  },
+  navBtnText: {
+    color: BG,
+    fontSize: 11,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 0.5,
+  },
+
+  /* Asymmetrical Hero Grid */
+  heroGrid: {
+    flexDirection: 'row',
+    paddingHorizontal: 48,
+    paddingVertical: 64,
+    gap: 48,
+    borderBottomWidth: 1,
+    borderColor: BORD,
+  },
+  heroMain: {
+    flex: 1.1,
+    justifyContent: 'center',
+  },
+  systemInfo: {
+    marginBottom: 16,
+  },
+  systemInfoText: {
+    color: DIM,
+    fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 2,
+  },
+  mainHeadline: {
+    color: TXT,
+    fontSize: 54,
+    fontFamily: 'Poppins_800ExtraBold',
+    lineHeight: 62,
+    letterSpacing: -2,
     marginBottom: 24,
   },
-  heroBadgeTxt: { color: O, fontFamily: 'Outfit_600SemiBold', fontSize: 12 },
-
-  heroH1: {
-    fontSize: 52,
-    fontFamily: 'Outfit_800ExtraBold',
-    color: TXT,
-    lineHeight: 60,
-    letterSpacing: -1.5,
-    marginBottom: 20,
-  },
-  heroDesc: {
-    fontSize: 16,
-    fontFamily: 'Outfit_500Medium',
+  mainSubhead: {
     color: MUTED,
-    lineHeight: 26,
-    marginBottom: 32,
-    maxWidth: 480,
+    fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
+    lineHeight: 25,
+    maxWidth: 520,
+    marginBottom: 36,
   },
-  heroCTA: {
-    alignSelf: 'flex-start',
+
+  /* Terminal Installation Card */
+  installTerminal: {
+    backgroundColor: SURF,
+    borderWidth: 1,
+    borderColor: BORD,
+    borderRadius: 12,
+    overflow: 'hidden',
+    maxWidth: 500,
+    marginBottom: 44,
+  },
+  terminalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0E0E10',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: BORD,
+  },
+  terminalButtons: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  terminalBtnCircle: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+  },
+  terminalTitle: {
+    color: DIM,
+    fontSize: 10,
+    fontFamily: 'Poppins_600SemiBold',
+    letterSpacing: 0.5,
+  },
+  terminalBody: {
+    padding: 20,
+  },
+  terminalLine: {
+    color: MUTED,
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 12,
+    lineHeight: 20,
+  },
+  terminalCTA: {
     backgroundColor: O,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 16,
-    marginBottom: 32,
-    ...Platform.select({ web: { boxShadow: '0 8px 32px rgba(255,107,0,0.35)', transition: 'all 0.2s ease' } }) as any,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 16,
   },
-  heroCTATxt: { color: TXT, fontFamily: 'Outfit_700Bold', fontSize: 16 },
+  terminalCTAText: {
+    color: TXT,
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 1,
+  },
 
-  heroStats: { flexDirection: 'row', alignItems: 'center', gap: 20 },
-  statItem: { alignItems: 'center', gap: 2 },
-  statVal: { fontSize: 18, fontFamily: 'Outfit_800ExtraBold', color: TXT },
-  statLbl: { fontSize: 11, fontFamily: 'Outfit_500Medium', color: MUTED },
-  statDivider: { width: 1, height: 32, backgroundColor: BORD },
+  /* Metric Info Grid */
+  metricGrid: {
+    flexDirection: 'row',
+    gap: 32,
+    paddingTop: 12,
+  },
+  metricUnit: {
+    gap: 4,
+  },
+  metricValue: {
+    color: TXT,
+    fontSize: 22,
+    fontFamily: 'Poppins_800ExtraBold',
+    letterSpacing: -0.5,
+  },
+  metricLabel: {
+    color: DIM,
+    fontSize: 8.5,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 0.5,
+  },
 
-  /* Phone */
+  /* Hero Visual Pane */
+  heroVisual: {
+    flex: 0.9,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    position: 'relative',
+  },
+  viewController: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: SURF,
+    borderWidth: 1,
+    borderColor: BORD,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 28,
+  },
+  ctrlHeading: {
+    color: DIM,
+    fontSize: 8,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 1.5,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  ctrlList: {
+    gap: 6,
+  },
+  ctrlBtn: {
+    backgroundColor: '#0E0E10',
+    borderWidth: 1,
+    borderColor: BORD,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  ctrlBtnActive: {
+    borderColor: O,
+    backgroundColor: 'rgba(255, 107, 0, 0.03)',
+  },
+  ctrlBtnText: {
+    color: MUTED,
+    fontSize: 10,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 0.5,
+  },
+  ctrlBtnTextActive: {
+    color: O,
+  },
+  mockupWrapper: {
+    alignItems: 'center',
+  },
+
+  /* Phone Shell Styling */
   phoneShell: {
     borderRadius: 44,
     borderWidth: 10,
-    borderColor: '#2A2A2E',
+    borderColor: '#1D1D20',
     backgroundColor: BG,
     overflow: 'hidden',
     position: 'relative',
@@ -441,168 +624,131 @@ const s = StyleSheet.create({
     top: 0,
     left: '50%',
     width: 100,
-    height: 22,
-    backgroundColor: '#2A2A2E',
-    borderBottomLeftRadius: 14,
-    borderBottomRightRadius: 14,
-    zIndex: 10,
+    height: 20,
+    backgroundColor: '#1D1D20',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    zIndex: 99,
     transform: [{ translateX: -50 }],
   },
 
-  /* Sections */
-  section: {
-    paddingHorizontal: 80,
+  /* Asymmetric Features Section */
+  featuresSection: {
+    flexDirection: 'row',
+    paddingHorizontal: 48,
     paddingVertical: 80,
-    borderTopWidth: 1,
-    borderTopColor: BORD,
-  },
-  sectionHead: { alignItems: 'center', marginBottom: 56 },
-  sectionLabel: {
-    fontSize: 11,
-    fontFamily: 'Outfit_700Bold',
-    color: O,
-    letterSpacing: 2.5,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-  },
-  sectionH2: {
-    fontSize: 36,
-    fontFamily: 'Outfit_800ExtraBold',
-    color: TXT,
-    letterSpacing: -0.8,
-    lineHeight: 44,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  sectionDesc: {
-    fontSize: 15,
-    fontFamily: 'Outfit_500Medium',
-    color: MUTED,
-    lineHeight: 24,
-    textAlign: 'center',
-    maxWidth: 560,
-  },
-
-  /* Features Grid */
-  featGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
-    justifyContent: 'center',
-  },
-  featCard: {
-    width: '30%',
-    minWidth: 240,
-    backgroundColor: SURF,
-    borderRadius: 20,
-    padding: 24,
-    borderWidth: 1,
+    borderBottomWidth: 1,
     borderColor: BORD,
-    overflow: 'hidden',
-    ...Platform.select({ web: { boxShadow: '0 4px 20px rgba(0,0,0,0.3)', transition: 'transform 0.2s ease' } }) as any,
+    backgroundColor: BG2,
+    gap: 64,
   },
-  featIconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  featLeftPane: {
+    flex: 0.8,
+  },
+  featSectionLabel: {
+    color: O,
+    fontSize: 9,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 2.5,
     marginBottom: 16,
   },
-  featEmoji: { fontSize: 24 },
-  featTitle: { fontSize: 16, fontFamily: 'Outfit_700Bold', color: TXT, marginBottom: 8 },
-  featDesc: { fontSize: 13, fontFamily: 'Outfit_500Medium', color: MUTED, lineHeight: 20 },
-  featAccentLine: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, opacity: 0.6 },
-
-  /* Preview Section */
-  previewSection: { backgroundColor: BG2 },
-  previewPhones: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    gap: 20,
-    flexWrap: 'wrap',
-  },
-  previewPhoneWrap: { alignItems: 'center', gap: 16 },
-  previewPhoneCenter: { marginBottom: 0, zIndex: 2 },
-  previewPhoneLabel: {
-    fontSize: 13,
-    fontFamily: 'Outfit_600SemiBold',
-    color: MUTED,
-    marginTop: 8,
-  },
-
-  /* CTA Section */
-  ctaSection: {
-    paddingHorizontal: 80,
-    paddingVertical: 100,
-    borderTopWidth: 1,
-    borderTopColor: BORD,
-    alignItems: 'center',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  ctaGlow: {
-    position: 'absolute',
-    top: '30%',
-    width: 800,
-    height: 400,
-    borderRadius: 400,
-    backgroundColor: 'rgba(255,107,0,0.05)',
-    ...Platform.select({ web: { filter: 'blur(80px)', pointerEvents: 'none' } }) as any,
-  },
-  ctaLogo: { width: 72, height: 72, borderRadius: 18, marginBottom: 24 },
-  ctaH2: {
-    fontSize: 40,
-    fontFamily: 'Outfit_800ExtraBold',
+  featSectionTitle: {
     color: TXT,
-    textAlign: 'center',
-    lineHeight: 50,
+    fontSize: 32,
+    fontFamily: 'Poppins_800ExtraBold',
     letterSpacing: -1,
-    marginBottom: 16,
-    zIndex: 1,
-  },
-  ctaDesc: {
-    fontSize: 15,
-    fontFamily: 'Outfit_500Medium',
-    color: MUTED,
-    textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: 520,
-    marginBottom: 36,
-    zIndex: 1,
-  },
-  ctaBtn: {
-    backgroundColor: O,
-    paddingVertical: 18,
-    paddingHorizontal: 40,
-    borderRadius: 18,
+    lineHeight: 40,
     marginBottom: 20,
-    zIndex: 1,
-    ...Platform.select({ web: { boxShadow: '0 12px 40px rgba(255,107,0,0.4)', transition: 'all 0.2s ease' } }) as any,
   },
-  ctaBtnTxt: { color: TXT, fontFamily: 'Outfit_700Bold', fontSize: 18 },
-  ctaNote: {
-    fontSize: 12,
-    fontFamily: 'Outfit_500Medium',
+  featSectionDesc: {
+    color: MUTED,
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    lineHeight: 24,
+  },
+  featRightPane: {
+    flex: 1.2,
+    gap: 32,
+  },
+  featRow: {
+    flexDirection: 'row',
+    gap: 24,
+    borderBottomWidth: 1,
+    borderColor: BORD,
+    paddingBottom: 24,
+  },
+  featRowLeft: {
+    alignItems: 'flex-start',
+    gap: 6,
+    width: 90,
+  },
+  featId: {
+    color: O,
+    fontSize: 16,
+    fontFamily: 'Poppins_800ExtraBold',
+  },
+  featTag: {
     color: DIM,
-    textAlign: 'center',
-    zIndex: 1,
+    fontSize: 8,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 0.5,
+  },
+  featRowContent: {
+    flex: 1,
+    gap: 4,
+  },
+  featTitle: {
+    color: TXT,
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+  },
+  featDesc: {
+    color: MUTED,
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    lineHeight: 20,
   },
 
   /* Footer */
   footer: {
-    paddingHorizontal: 80,
-    paddingVertical: 40,
-    borderTopWidth: 1,
-    borderTopColor: BORD,
+    paddingHorizontal: 48,
+    paddingVertical: 36,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
     backgroundColor: BG,
+    borderTopWidth: 1,
+    borderColor: BORD,
   },
-  footerBrand: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
-  footerIcon: { width: 32, height: 32, borderRadius: 8 },
-  footerTitle: { fontSize: 20, fontFamily: 'Outfit_800ExtraBold', color: TXT },
-  footerTagline: { fontSize: 13, fontFamily: 'Outfit_500Medium', color: MUTED },
-  footerCopy: { fontSize: 12, fontFamily: 'Outfit_500Medium', color: DIM },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  footerIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 5,
+  },
+  footerBrandText: {
+    color: TXT,
+    fontSize: 11,
+    fontFamily: 'Poppins_800ExtraBold',
+    letterSpacing: 0.5,
+  },
+  footerRights: {
+    color: DIM,
+    fontSize: 9,
+    fontFamily: 'Poppins_600SemiBold',
+    letterSpacing: 0.3,
+  },
+  slidesWrapper: {
+    flexDirection: 'row',
+    width: 310 * 4,
+    height: '100%',
+  },
+  slideItem: {
+    width: 310,
+    height: '100%',
+  },
 });

@@ -7,11 +7,16 @@ import { ChevronRight, ChevronLeft, Award, Scale, Activity, ArrowRight, User as 
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function OnboardingScreen() {
-  const { setOnboardingData, theme, user, signInWithGoogle } = useAppState();
+  const { setOnboardingData, theme, user, loginWithEmailAndPassword, registerWithEmailAndPassword } = useAppState();
   const router = useRouter();
   const c = Colors[theme];
   const isDark = theme === 'dark';
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authName, setAuthName] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
 
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState<UserProfile['goal']>('maintenance');
@@ -321,72 +326,154 @@ export default function OnboardingScreen() {
               })}
             </View>
 
-            {/* Bottom Login Action Area */}
-            <View style={{ gap: 12, marginTop: 20 }}>
+            {/* Bottom Login Action Area (Custom ID & Password Form) */}
+            <View style={{ gap: 14, marginTop: 12 }}>
+              {authMode === 'register' && (
+                <View style={{ gap: 6 }}>
+                  <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Nama Lengkap</Text>
+                  <TextInput
+                    value={authName}
+                    onChangeText={setAuthName}
+                    placeholder="Masukkan nama Anda"
+                    placeholderTextColor={c.textMuted}
+                    style={{
+                      backgroundColor: c.surface,
+                      color: c.text,
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: c.border,
+                      fontFamily: 'Outfit_500Medium',
+                      fontSize: 14,
+                    }}
+                  />
+                </View>
+              )}
+
+              <View style={{ gap: 6 }}>
+                <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Email / ID</Text>
+                <TextInput
+                  value={authEmail}
+                  onChangeText={setAuthEmail}
+                  placeholder="nama@email.com"
+                  placeholderTextColor={c.textMuted}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  style={{
+                    backgroundColor: c.surface,
+                    color: c.text,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: c.border,
+                    fontFamily: 'Outfit_500Medium',
+                    fontSize: 14,
+                  }}
+                />
+              </View>
+
+              <View style={{ gap: 6 }}>
+                <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Password</Text>
+                <TextInput
+                  value={authPassword}
+                  onChangeText={setAuthPassword}
+                  placeholder="••••••"
+                  placeholderTextColor={c.textMuted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  style={{
+                    backgroundColor: c.surface,
+                    color: c.text,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: c.border,
+                    fontFamily: 'Outfit_500Medium',
+                    fontSize: 14,
+                  }}
+                />
+              </View>
+
               {isLoggingIn ? (
                 <View style={{
-                  paddingVertical: 16,
+                  paddingVertical: 14,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  backgroundColor: Accent.pale,
+                  borderRadius: 12,
                 }}>
                   <ActivityIndicator size="small" color={Accent.primary} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontFamily: 'Outfit_600SemiBold',
-                    color: c.textSub,
-                    marginTop: 8,
-                  }}>
-                    Menghubungkan Akun Google...
-                  </Text>
                 </View>
               ) : (
                 <TouchableOpacity
                   onPress={async () => {
+                    if (!authEmail || !authPassword) {
+                      Alert.alert('Form Belum Lengkap', 'Silakan masukkan email dan password.');
+                      return;
+                    }
                     setIsLoggingIn(true);
                     try {
-                      await signInWithGoogle();
-                    } catch (err) {
-                      // Error is handled in useAppState
+                      if (authMode === 'login') {
+                        await loginWithEmailAndPassword(authEmail, authPassword);
+                      } else {
+                        if (!authName) {
+                          Alert.alert('Form Belum Lengkap', 'Silakan masukkan nama Anda.');
+                          setIsLoggingIn(false);
+                          return;
+                        }
+                        await registerWithEmailAndPassword(authName, authEmail, authPassword);
+                      }
+                    } catch (err: any) {
+                      Alert.alert('Gagal', err.message || 'Terjadi kesalahan sistem.');
                     } finally {
                       setIsLoggingIn(false);
                     }
                   }}
                   style={{
-                    flexDirection: 'row',
+                    backgroundColor: Accent.primary,
+                    paddingVertical: 14,
+                    borderRadius: 12,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 10,
-                    paddingVertical: 16,
-                    borderRadius: 14,
-                    backgroundColor: '#FFFFFF',
-                    borderWidth: 1,
-                    borderColor: '#E4E4E7',
+                    marginTop: 8,
                   }}
                 >
-                  <View style={{ width: 18, height: 18, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ color: '#09090B', fontFamily: 'Outfit_800ExtraBold', fontSize: 16 }}>G</Text>
-                  </View>
                   <Text style={{
-                    fontFamily: 'Outfit_600SemiBold',
+                    fontFamily: 'Outfit_700Bold',
                     fontSize: 14,
-                    color: '#09090B',
+                    color: '#FFFFFF',
                   }}>
-                    Masuk dengan Google
+                    {authMode === 'login' ? 'Masuk' : 'Daftar Akun'}
                   </Text>
                 </TouchableOpacity>
               )}
-              
-              <Text style={{
-                fontSize: 10,
-                fontFamily: 'Outfit_500Medium',
-                color: c.textMuted,
-                textAlign: 'center',
-                lineHeight: 14,
-                paddingHorizontal: 20,
-              }}>
-                Dengan masuk, Anda menyetujui sinkronisasi data kebugaran Anda secara aman ke server Cloud Firestore kami.
-              </Text>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setAuthMode(authMode === 'login' ? 'register' : 'login');
+                }}
+                style={{ alignSelf: 'center', marginTop: 4 }}
+              >
+                <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: Accent.primary }}>
+                  {authMode === 'login' ? 'Belum punya akun? Daftar sekarang' : 'Sudah punya akun? Masuk'}
+                </Text>
+              </TouchableOpacity>
             </View>
+
+            <Text style={{
+              fontSize: 10,
+              fontFamily: 'Outfit_500Medium',
+              color: c.textMuted,
+              textAlign: 'center',
+              lineHeight: 14,
+              paddingHorizontal: 20,
+              marginTop: 16,
+            }}>
+              Dengan masuk, Anda menyetujui sinkronisasi data kebugaran Anda secara aman ke server Cloud Firestore kami.
+            </Text>
           </View>
         )}
 

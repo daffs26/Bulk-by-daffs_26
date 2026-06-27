@@ -3,7 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { auth, db, isConfigured } from '../config/firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateProfile,
+  signOut, 
+  onAuthStateChanged,
+} from 'firebase/auth';
 import { 
   doc, 
   setDoc, 
@@ -51,6 +57,12 @@ export interface WeightLog {
   date: string; // YYYY-MM-DD
 }
 
+interface LocalUser {
+  uid: string;
+  email: string;
+  displayName?: string;
+}
+
 interface AppStateContextType {
   isOnboarded: boolean;
   userProfile: UserProfile | null;
@@ -59,7 +71,7 @@ interface AppStateContextType {
   waterLoggedMl: number;
   streak: number;
   theme: 'dark' | 'light';
-  user: User | null;
+  user: LocalUser | null;
   toggleTheme: () => void;
   setOnboardingData: (profile: UserProfile) => Promise<void>;
   addFoodLog: (food: Omit<FoodLog, 'id' | 'date'>) => Promise<void>;
@@ -68,7 +80,8 @@ interface AppStateContextType {
   addWater: (ml: number) => Promise<void>;
   resetWater: () => Promise<void>;
   resetAllData: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  loginWithEmailAndPassword: (email: string, password: string) => Promise<void>;
+  registerWithEmailAndPassword: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -104,44 +117,36 @@ export const calculateFitnessMetrics = (
   };
   const tdee = Math.round(bmr * multipliers[activityLevel]);
 
-  // Calorie Targets based on Goal
+  // Goal adjustments
   let targetCalories = tdee;
   if (goal === 'cutting') {
-    targetCalories = Math.max(1200, tdee - 400); // Prevent going below extreme starvation limit
+    targetCalories = Math.round(tdee - 500);
   } else if (goal === 'bulking') {
-    targetCalories = tdee + 400;
+    targetCalories = Math.round(tdee + 300);
   }
 
-  // Macro Distributions
-  let targetMacros = { protein: 0, carb: 0, fat: 0 };
-  if (goal === 'cutting') {
-    // Protein 40% / Carb 30% / Fat 30%
-    targetMacros = {
-      protein: Math.round((targetCalories * 0.4) / 4),
-      carb: Math.round((targetCalories * 0.3) / 4),
-      fat: Math.round((targetCalories * 0.3) / 9),
-    };
-  } else if (goal === 'bulking') {
-    // Protein 30% / Carb 50% / Fat 20%
-    targetMacros = {
-      protein: Math.round((targetCalories * 0.3) / 4),
-      carb: Math.round((targetCalories * 0.5) / 4),
-      fat: Math.round((targetCalories * 0.2) / 9),
-    };
-  } else {
-    // Maintenance: Protein 30% / Carb 40% / Fat 30%
-    targetMacros = {
-      protein: Math.round((targetCalories * 0.3) / 4),
-      carb: Math.round((targetCalories * 0.4) / 4),
-      fat: Math.round((targetCalories * 0.3) / 9),
-    };
-  }
+  // Macros split (Protein: 2g per kg, Fat: 25% of energy, Carbs: remaining)
+  const proteinG = Math.round(weight * 2.0);
+  const proteinKcal = proteinG * 4;
+  const fatKcal = Math.round(targetCalories * 0.25);
+  const fatG = Math.round(fatKcal / 9);
+  const carbKcal = targetCalories - (proteinKcal + fatKcal);
+  const carbG = Math.round(carbKcal / 4);
 
-  return { bmi, tdee: Math.round(tdee), targetCalories, targetMacros };
+  return {
+    bmi,
+    tdee,
+    targetCalories,
+    targetMacros: {
+      protein: proteinG,
+      carb: carbG,
+      fat: fatG,
+    },
+  };
 };
 
 export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
@@ -151,6 +156,11 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   const { colorScheme, setColorScheme } = useColorScheme();
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  const getStorageKey = (baseKey: string, activeUser?: LocalUser | null) => {
+    const currentUser = activeUser !== undefined ? activeUser : user;
+    return currentUser ? `${baseKey}_${currentUser.uid}` : baseKey;
+  };
 
   // Load state on mount
   useEffect(() => {
@@ -165,27 +175,37 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (!isConfigured) {
           // Offline / Local fallback: Load everything from AsyncStorage
-          const storedProfile = await AsyncStorage.getItem('@bulk_user_profile');
-          const storedOnboarded = await AsyncStorage.getItem('@bulk_is_onboarded');
-          const storedFoods = await AsyncStorage.getItem('@bulk_food_logs');
-          const storedWeights = await AsyncStorage.getItem('@bulk_weight_logs');
-          const storedWater = await AsyncStorage.getItem('@bulk_water_logged');
-          const storedStreak = await AsyncStorage.getItem('@bulk_streak');
+          const storedLocalUser = await AsyncStorage.getItem('@bulk_local_active_user');
+          if (storedLocalUser) {
+            const parsedUser = JSON.parse(storedLocalUser) as LocalUser;
+            setUser(parsedUser);
 
-          if (storedProfile) setUserProfile(JSON.parse(storedProfile));
-          if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
-          if (storedFoods) setFoodLogs(JSON.parse(storedFoods));
-          if (storedWeights) setWeightLogs(JSON.parse(storedWeights));
-          if (storedWater) setWaterLoggedMl(JSON.parse(storedWater));
-          if (storedStreak) setStreak(JSON.parse(storedStreak));
+            const storedProfile = await AsyncStorage.getItem(getStorageKey('@bulk_user_profile', parsedUser));
+            const storedOnboarded = await AsyncStorage.getItem(getStorageKey('@bulk_is_onboarded', parsedUser));
+            const storedFoods = await AsyncStorage.getItem(getStorageKey('@bulk_food_logs', parsedUser));
+            const storedWeights = await AsyncStorage.getItem(getStorageKey('@bulk_weight_logs', parsedUser));
+            const storedWater = await AsyncStorage.getItem(getStorageKey('@bulk_water_logged', parsedUser));
+            const storedStreak = await AsyncStorage.getItem(getStorageKey('@bulk_streak', parsedUser));
+
+            if (storedProfile) setUserProfile(JSON.parse(storedProfile));
+            if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
+            if (storedFoods) setFoodLogs(JSON.parse(storedFoods));
+            if (storedWeights) setWeightLogs(JSON.parse(storedWeights));
+            if (storedWater) setWaterLoggedMl(JSON.parse(storedWater));
+            if (storedStreak) setStreak(JSON.parse(storedStreak));
+          }
           return;
         }
 
-        // Firebase Sync mode - Enforce Google Sign-In manually instead of signInAnonymously
-
+        // Firebase Sync mode
         unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-          setUser(firebaseUser);
           if (firebaseUser) {
+            const mappedUser: LocalUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              displayName: firebaseUser.displayName || undefined
+            };
+            setUser(mappedUser);
             const uid = firebaseUser.uid;
 
             // 1. Fetch User Profile
@@ -195,12 +215,12 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               setUserProfile(data as UserProfile);
               setIsOnboarded(true);
               setStreak(data.streak || 0);
-              await AsyncStorage.setItem('@bulk_user_profile', JSON.stringify(data));
-              await AsyncStorage.setItem('@bulk_is_onboarded', JSON.stringify(true));
-              await AsyncStorage.setItem('@bulk_streak', JSON.stringify(data.streak || 0));
+              await AsyncStorage.setItem(getStorageKey('@bulk_user_profile', mappedUser), JSON.stringify(data));
+              await AsyncStorage.setItem(getStorageKey('@bulk_is_onboarded', mappedUser), JSON.stringify(true));
+              await AsyncStorage.setItem(getStorageKey('@bulk_streak', mappedUser), JSON.stringify(data.streak || 0));
             } else {
               // Sync local profile to Firestore if exists
-              const localProfile = await AsyncStorage.getItem('@bulk_user_profile');
+              const localProfile = await AsyncStorage.getItem(getStorageKey('@bulk_user_profile', mappedUser));
               if (localProfile) {
                 const parsed = JSON.parse(localProfile);
                 setUserProfile(parsed);
@@ -218,10 +238,10 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             });
             if (foods.length > 0) {
               setFoodLogs(foods);
-              await AsyncStorage.setItem('@bulk_food_logs', JSON.stringify(foods));
+              await AsyncStorage.setItem(getStorageKey('@bulk_food_logs', mappedUser), JSON.stringify(foods));
             } else {
               // Sync local food logs to Firestore if exists
-              const localFoods = await AsyncStorage.getItem('@bulk_food_logs');
+              const localFoods = await AsyncStorage.getItem(getStorageKey('@bulk_food_logs', mappedUser));
               if (localFoods) {
                 const parsed = JSON.parse(localFoods) as FoodLog[];
                 setFoodLogs(parsed);
@@ -240,10 +260,10 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             });
             if (weights.length > 0) {
               setWeightLogs(weights);
-              await AsyncStorage.setItem('@bulk_weight_logs', JSON.stringify(weights));
+              await AsyncStorage.setItem(getStorageKey('@bulk_weight_logs', mappedUser), JSON.stringify(weights));
             } else {
               // Sync local weight logs to Firestore if exists
-              const localWeights = await AsyncStorage.getItem('@bulk_weight_logs');
+              const localWeights = await AsyncStorage.getItem(getStorageKey('@bulk_weight_logs', mappedUser));
               if (localWeights) {
                 const parsed = JSON.parse(localWeights) as WeightLog[];
                 setWeightLogs(parsed);
@@ -259,20 +279,21 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             if (waterDoc.exists()) {
               const ml = waterDoc.data().ml || 0;
               setWaterLoggedMl(ml);
-              await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(ml));
+              await AsyncStorage.setItem(getStorageKey('@bulk_water_logged', mappedUser), JSON.stringify(ml));
             } else {
               // Check if we have a locally stored water log to push
-              const localWater = await AsyncStorage.getItem('@bulk_water_logged');
+              const localWater = await AsyncStorage.getItem(getStorageKey('@bulk_water_logged', mappedUser));
               if (localWater) {
                 const ml = JSON.parse(localWater);
                 setWaterLoggedMl(ml);
                 await setDoc(doc(db, 'users', uid, 'water_logs', today), { ml, date: today });
               } else {
                 setWaterLoggedMl(0);
-                await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(0));
+                await AsyncStorage.setItem(getStorageKey('@bulk_water_logged', mappedUser), JSON.stringify(0));
               }
             }
           } else {
+            setUser(null);
             setUserProfile(null);
             setIsOnboarded(false);
             setFoodLogs([]);
@@ -303,8 +324,8 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setOnboardingData = async (profile: UserProfile) => {
     setUserProfile(profile);
     setIsOnboarded(true);
-    await AsyncStorage.setItem('@bulk_user_profile', JSON.stringify(profile));
-    await AsyncStorage.setItem('@bulk_is_onboarded', JSON.stringify(true));
+    await AsyncStorage.setItem(getStorageKey('@bulk_user_profile'), JSON.stringify(profile));
+    await AsyncStorage.setItem(getStorageKey('@bulk_is_onboarded'), JSON.stringify(true));
     
     const today = new Date().toISOString().split('T')[0];
     const initialLog: WeightLog = {
@@ -314,9 +335,9 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
     const newWeightLogs = [initialLog];
     setWeightLogs(newWeightLogs);
-    await AsyncStorage.setItem('@bulk_weight_logs', JSON.stringify(newWeightLogs));
+    await AsyncStorage.setItem(getStorageKey('@bulk_weight_logs'), JSON.stringify(newWeightLogs));
 
-    if (isConfigured && auth.currentUser) {
+    if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       await setDoc(doc(db, 'users', uid), { ...profile, streak: 0 });
       await setDoc(doc(db, 'users', uid, 'weight_logs', initialLog.id), initialLog);
@@ -332,17 +353,17 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
     const updatedFoods = [newLog, ...foodLogs];
     setFoodLogs(updatedFoods);
-    await AsyncStorage.setItem('@bulk_food_logs', JSON.stringify(updatedFoods));
+    await AsyncStorage.setItem(getStorageKey('@bulk_food_logs'), JSON.stringify(updatedFoods));
 
     const uniqueDays = new Set(foodLogs.map(f => f.date));
     let newStreak = streak;
     if (!uniqueDays.has(today)) {
       newStreak = streak + 1;
       setStreak(newStreak);
-      await AsyncStorage.setItem('@bulk_streak', JSON.stringify(newStreak));
+      await AsyncStorage.setItem(getStorageKey('@bulk_streak'), JSON.stringify(newStreak));
     }
 
-    if (isConfigured && auth.currentUser) {
+    if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       await setDoc(doc(db, 'users', uid, 'food_logs', newLog.id), newLog);
       if (userProfile) {
@@ -354,9 +375,9 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const deleteFoodLog = async (id: string) => {
     const updatedFoods = foodLogs.filter(f => f.id !== id);
     setFoodLogs(updatedFoods);
-    await AsyncStorage.setItem('@bulk_food_logs', JSON.stringify(updatedFoods));
+    await AsyncStorage.setItem(getStorageKey('@bulk_food_logs'), JSON.stringify(updatedFoods));
 
-    if (isConfigured && auth.currentUser) {
+    if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       await deleteDoc(doc(db, 'users', uid, 'food_logs', id));
     }
@@ -377,16 +398,16 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       updatedWeights = [newLog, ...weightLogs];
     }
     setWeightLogs(updatedWeights);
-    await AsyncStorage.setItem('@bulk_weight_logs', JSON.stringify(updatedWeights));
+    await AsyncStorage.setItem(getStorageKey('@bulk_weight_logs'), JSON.stringify(updatedWeights));
 
     let updatedProfile = userProfile;
     if (userProfile) {
       updatedProfile = { ...userProfile, weightCurrent: weight };
       setUserProfile(updatedProfile);
-      await AsyncStorage.setItem('@bulk_user_profile', JSON.stringify(updatedProfile));
+      await AsyncStorage.setItem(getStorageKey('@bulk_user_profile'), JSON.stringify(updatedProfile));
     }
 
-    if (isConfigured && auth.currentUser) {
+    if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       await setDoc(doc(db, 'users', uid, 'weight_logs', newLog.id), newLog);
       if (updatedProfile) {
@@ -398,9 +419,9 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addWater = async (ml: number) => {
     const newWater = waterLoggedMl + ml;
     setWaterLoggedMl(newWater);
-    await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(newWater));
+    await AsyncStorage.setItem(getStorageKey('@bulk_water_logged'), JSON.stringify(newWater));
 
-    if (isConfigured && auth.currentUser) {
+    if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       const today = new Date().toISOString().split('T')[0];
       await setDoc(doc(db, 'users', uid, 'water_logs', today), { ml: newWater, date: today });
@@ -409,9 +430,9 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const resetWater = async () => {
     setWaterLoggedMl(0);
-    await AsyncStorage.setItem('@bulk_water_logged', JSON.stringify(0));
+    await AsyncStorage.setItem(getStorageKey('@bulk_water_logged'), JSON.stringify(0));
 
-    if (isConfigured && auth.currentUser) {
+    if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       const today = new Date().toISOString().split('T')[0];
       await setDoc(doc(db, 'users', uid, 'water_logs', today), { ml: 0, date: today });
@@ -419,6 +440,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const resetAllData = async () => {
+    const currentUid = user?.uid;
     setIsOnboarded(false);
     setUserProfile(null);
     setFoodLogs([]);
@@ -426,52 +448,155 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setWaterLoggedMl(0);
     setStreak(0);
     
-    await AsyncStorage.removeItem('@bulk_user_profile');
-    await AsyncStorage.removeItem('@bulk_is_onboarded');
-    await AsyncStorage.removeItem('@bulk_food_logs');
-    await AsyncStorage.removeItem('@bulk_weight_logs');
-    await AsyncStorage.removeItem('@bulk_water_logged');
-    await AsyncStorage.removeItem('@bulk_streak');
+    await AsyncStorage.removeItem(getStorageKey('@bulk_user_profile'));
+    await AsyncStorage.removeItem(getStorageKey('@bulk_is_onboarded'));
+    await AsyncStorage.removeItem(getStorageKey('@bulk_food_logs'));
+    await AsyncStorage.removeItem(getStorageKey('@bulk_weight_logs'));
+    await AsyncStorage.removeItem(getStorageKey('@bulk_water_logged'));
+    await AsyncStorage.removeItem(getStorageKey('@bulk_streak'));
 
-    if (isConfigured && auth.currentUser) {
+    if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       await deleteDoc(doc(db, 'users', uid));
       await auth.signOut();
+    } else {
+      // Offline mode: clean local user credentials as well
+      const storedUsersStr = await AsyncStorage.getItem('@bulk_local_users');
+      if (storedUsersStr && currentUid) {
+        const users = JSON.parse(storedUsersStr);
+        const filtered = users.filter((u: any) => u.uid !== currentUid);
+        await AsyncStorage.setItem('@bulk_local_users', JSON.stringify(filtered));
+      }
+      await AsyncStorage.removeItem('@bulk_local_active_user');
+      setUser(null);
     }
   };
 
-  const signInWithGoogle = async () => {
+  const loginWithEmailAndPassword = async (email: string, password: string) => {
     if (!isConfigured) {
-      Alert.alert('Offline Mode', 'Firebase is tidak terkonfigurasi. Google Sign-In tidak dapat digunakan.');
+      // Offline mode: check local AsyncStorage database
+      const storedUsersStr = await AsyncStorage.getItem('@bulk_local_users');
+      const users = storedUsersStr ? JSON.parse(storedUsersStr) : [];
+      const matched = users.find((u: any) => u.email === email && u.password === password);
+      
+      if (!matched) {
+        throw new Error('Email atau password salah.');
+      }
+
+      const localUser = { uid: matched.uid, email: matched.email, displayName: matched.name };
+      setUser(localUser);
+      await AsyncStorage.setItem('@bulk_local_active_user', JSON.stringify(localUser));
+
+      // Load user local state data
+      const storedProfile = await AsyncStorage.getItem(getStorageKey('@bulk_user_profile', localUser));
+      const storedOnboarded = await AsyncStorage.getItem(getStorageKey('@bulk_is_onboarded', localUser));
+      const storedFoods = await AsyncStorage.getItem(getStorageKey('@bulk_food_logs', localUser));
+      const storedWeights = await AsyncStorage.getItem(getStorageKey('@bulk_weight_logs', localUser));
+      const storedWater = await AsyncStorage.getItem(getStorageKey('@bulk_water_logged', localUser));
+      const storedStreak = await AsyncStorage.getItem(getStorageKey('@bulk_streak', localUser));
+
+      if (storedProfile) setUserProfile(JSON.parse(storedProfile));
+      else setUserProfile(null);
+
+      if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
+      else setIsOnboarded(false);
+
+      setFoodLogs(storedFoods ? JSON.parse(storedFoods) : []);
+      setWeightLogs(storedWeights ? JSON.parse(storedWeights) : []);
+      setWaterLoggedMl(storedWater ? JSON.parse(storedWater) : 0);
+      setStreak(storedStreak ? JSON.parse(storedStreak) : 0);
       return;
     }
-    const provider = new GoogleAuthProvider();
+
     try {
-      await signInWithPopup(auth, provider);
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      setUser({
+        uid: res.user.uid,
+        email: res.user.email || '',
+        displayName: res.user.displayName || undefined
+      });
     } catch (error: any) {
-      console.error('Google login error:', error);
-      Alert.alert('Login Gagal', error.message || 'Gagal login menggunakan Google.');
-      throw error;
+      console.error('Firebase login error:', error);
+      let errMsg = 'Gagal login.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errMsg = 'Email atau password salah.';
+      } else if (error.code === 'auth/invalid-email') {
+        errMsg = 'Format email tidak valid.';
+      }
+      throw new Error(errMsg);
+    }
+  };
+
+  const registerWithEmailAndPassword = async (name: string, email: string, password: string) => {
+    if (!email || !email.includes('@')) {
+      throw new Error('Masukkan alamat email yang valid.');
+    }
+    if (!password || password.length < 6) {
+      throw new Error('Password minimal harus 6 karakter.');
+    }
+
+    if (!isConfigured) {
+      // Offline mode: store local credentials
+      const storedUsersStr = await AsyncStorage.getItem('@bulk_local_users');
+      const users = storedUsersStr ? JSON.parse(storedUsersStr) : [];
+      if (users.some((u: any) => u.email === email)) {
+        throw new Error('Email sudah terdaftar.');
+      }
+      const newUid = `local-uid-${Date.now()}`;
+      const newUser = { uid: newUid, name, email, password };
+      users.push(newUser);
+      await AsyncStorage.setItem('@bulk_local_users', JSON.stringify(users));
+
+      // Auto login
+      const localUser = { uid: newUid, email, displayName: name };
+      setUser(localUser);
+      await AsyncStorage.setItem('@bulk_local_active_user', JSON.stringify(localUser));
+
+      // Reset state for new local user
+      setUserProfile(null);
+      setIsOnboarded(false);
+      setFoodLogs([]);
+      setWeightLogs([]);
+      setWaterLoggedMl(0);
+      setStreak(0);
+      return;
+    }
+
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(res.user, { displayName: name });
+      setUser({
+        uid: res.user.uid,
+        email: res.user.email || '',
+        displayName: name
+      });
+    } catch (error: any) {
+      console.error('Firebase registration error:', error);
+      let errMsg = 'Gagal mendaftar.';
+      if (error.code === 'auth/email-already-in-use') {
+        errMsg = 'Email sudah digunakan oleh akun lain.';
+      } else if (error.code === 'auth/weak-password') {
+        errMsg = 'Password terlalu lemah (minimal 6 karakter).';
+      }
+      throw new Error(errMsg);
     }
   };
 
   const logout = async () => {
-    if (isConfigured) {
+    if (isConfigured && auth) {
       await signOut(auth);
     }
-    setIsOnboarded(false);
+    
+    // Clear active session
+    await AsyncStorage.removeItem('@bulk_local_active_user');
+    
+    setUser(null);
     setUserProfile(null);
+    setIsOnboarded(false);
     setFoodLogs([]);
     setWeightLogs([]);
     setWaterLoggedMl(0);
     setStreak(0);
-    
-    await AsyncStorage.removeItem('@bulk_user_profile');
-    await AsyncStorage.removeItem('@bulk_is_onboarded');
-    await AsyncStorage.removeItem('@bulk_food_logs');
-    await AsyncStorage.removeItem('@bulk_weight_logs');
-    await AsyncStorage.removeItem('@bulk_water_logged');
-    await AsyncStorage.removeItem('@bulk_streak');
   };
 
   return (
@@ -493,7 +618,8 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addWater,
         resetWater,
         resetAllData,
-        signInWithGoogle,
+        loginWithEmailAndPassword,
+        registerWithEmailAndPassword,
         logout,
       }}
     >
