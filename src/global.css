@@ -146,3 +146,38 @@ body {
   }
 }
 
+/* Hide scrollbars for the phone simulator screen and container */
+@media (min-width: 1024px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0B0C;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #252528;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #FF6B00;
+  }
+
+  /* Specific selectors to target inner scroll containers of React Native Web in simulator */
+  .phone-screen div,
+  .phone-screen scrollview,
+  .phone-screen div[style*="overflow"] {
+    -ms-overflow-style: none !important;  /* IE and Edge */
+    scrollbar-width: none !important;  /* Firefox */
+  }
+
+  .phone-screen div::-webkit-scrollbar,
+  .phone-screen scrollview::-webkit-scrollbar,
+  .phone-screen div[style*="overflow"]::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+

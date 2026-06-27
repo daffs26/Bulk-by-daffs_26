@@ -3,7 +3,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppStateProvider, useAppState } from '@/hooks/useAppState';
 import { useFonts, Outfit_300Light, Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold, Outfit_800ExtraBold } from '@expo-google-fonts/outfit';
-import { Platform, useWindowDimensions, View, Text, Pressable, Image, StyleSheet } from 'react-native';
+import { Platform, useWindowDimensions, View, Text, Pressable, Image, StyleSheet, ScrollView } from 'react-native';
 import { Colors, Accent } from '@/constants/theme';
 import '../global.css';
 
@@ -87,8 +87,12 @@ function AppLayoutContent() {
   if (isLargeScreen) {
     return (
       <View style={styles.desktopLayout}>
-        {/* Left Column: Branding and PWA Install */}
-        <View style={styles.desktopLeft}>
+        {/* Left Column: Scrollable Branding and PWA Install */}
+        <ScrollView 
+          style={styles.desktopLeftScroll}
+          contentContainerStyle={styles.desktopLeftContent}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Logo Header */}
           <View style={styles.logoHeader}>
             <Image 
@@ -143,7 +147,7 @@ function AppLayoutContent() {
           {/* Features Grid */}
           <View style={styles.featuresGrid}>
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>📸</Text>
+              <View style={styles.bulletPoint} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.featureTitle}>AI Food Scan</Text>
                 <Text style={styles.featureDesc}>Ambil foto makanan dan dapatkan detail kalori instan.</Text>
@@ -151,7 +155,7 @@ function AppLayoutContent() {
             </View>
 
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>📴</Text>
+              <View style={styles.bulletPoint} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.featureTitle}>100% Offline</Text>
                 <Text style={styles.featureDesc}>Bekerja tanpa koneksi internet setelah di-install.</Text>
@@ -159,7 +163,7 @@ function AppLayoutContent() {
             </View>
 
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>⚡</Text>
+              <View style={styles.bulletPoint} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.featureTitle}>Macro Tracker</Text>
                 <Text style={styles.featureDesc}>Lacak Protein, Karbohidrat, Lemak, dan Air Minum harian.</Text>
@@ -167,23 +171,30 @@ function AppLayoutContent() {
             </View>
 
             <View style={styles.featureItem}>
-              <Text style={styles.featureIcon}>📈</Text>
+              <View style={styles.bulletPoint} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.featureTitle}>Grafik Kemajuan</Text>
                 <Text style={styles.featureDesc}>Lihat statistik berat badan dan asupan kalori Anda.</Text>
               </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
 
         {/* Right Column: Centered Realistic Phone Mockup */}
         <View style={styles.desktopRight}>
-          <View style={styles.phoneMockup}>
-            {/* Camera / Speaker Notch */}
-            <View style={styles.phoneNotch} />
-            
-            {/* App Screen inside phone mockup */}
-            {appContent}
+          <View style={styles.phoneMockupContainer}>
+            {/* Side Buttons */}
+            <View style={styles.volumeUpButton} />
+            <View style={styles.volumeDownButton} />
+            <View style={styles.powerButton} />
+
+            <View style={styles.phoneMockup}>
+              {/* Dynamic Island Notch */}
+              <View style={styles.phoneNotch} />
+              
+              {/* App Screen inside phone mockup */}
+              {appContent}
+            </View>
           </View>
         </View>
       </View>
@@ -202,12 +213,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B0B0C',
     overflow: 'hidden',
   },
-  desktopLeft: {
+  desktopLeftScroll: {
     flex: 1.2,
+    backgroundColor: '#0B0B0C',
+  },
+  desktopLeftContent: {
     paddingHorizontal: 64,
-    paddingVertical: 48,
+    paddingVertical: 64,
     justifyContent: 'center',
+    minHeight: '100%',
     maxWidth: 680,
+    alignSelf: 'center',
   },
   desktopRight: {
     flex: 1,
@@ -339,8 +355,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  featureIcon: {
-    fontSize: 20,
+  bulletPoint: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FF6B00',
+    marginTop: 6,
   },
   featureTitle: {
     fontSize: 14,
@@ -353,6 +373,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Outfit_500Medium',
     color: '#707075',
     lineHeight: 16,
+  },
+  phoneMockupContainer: {
+    position: 'relative',
+    padding: 10,
   },
   phoneMockup: {
     width: 360,
@@ -387,6 +411,36 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 34,
     overflow: 'hidden',
+  },
+  volumeUpButton: {
+    position: 'absolute',
+    left: -2,
+    top: 130,
+    width: 4,
+    height: 50,
+    backgroundColor: '#242426',
+    borderTopLeftRadius: 4,
+    borderBottomLeftRadius: 4,
+  },
+  volumeDownButton: {
+    position: 'absolute',
+    left: -2,
+    top: 195,
+    width: 4,
+    height: 50,
+    backgroundColor: '#242426',
+    borderTopLeftRadius: 4,
+    borderBottomLeftRadius: 4,
+  },
+  powerButton: {
+    position: 'absolute',
+    right: -2,
+    top: 160,
+    width: 4,
+    height: 75,
+    backgroundColor: '#242426',
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
   },
 });
 

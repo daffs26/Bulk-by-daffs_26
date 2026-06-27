@@ -50,10 +50,10 @@ export default function Html({ children }: { children: React.ReactNode }) {
         <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
 
         {/* ── Favicon ── */}
-        <link rel="icon" href="/favicon.ico?v=3" type="image/x-icon" />
-        <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+        <link rel="icon" href="https://bulk-app-daffs26.vercel.app/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="https://bulk-app-daffs26.vercel.app/favicon.ico" type="image/x-icon" />
+        <link rel="icon" type="image/png" sizes="192x192" href="https://bulk-app-daffs26.vercel.app/icons/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="https://bulk-app-daffs26.vercel.app/icons/icon-512.png" />
 
         {/* ── JSON-LD Structured Data (Google understands this) ── */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
