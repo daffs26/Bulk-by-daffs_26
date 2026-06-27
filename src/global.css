@@ -44,3 +44,105 @@ body {
   --ls-wider: 0.06em;
   --ls-widest: 0.08em;
 }
+
+/* ── Desktop Web Landing Page & Phone Mockup Styles ── */
+@media (min-width: 1024px) {
+  .desktop-layout {
+    display: flex;
+    flex-direction: row;
+    min-height: 100vh;
+    width: 100%;
+    background-color: #0B0B0C;
+    color: #FFFFFF;
+    overflow-x: hidden;
+  }
+
+  .desktop-left {
+    flex: 1.2;
+    padding: 3rem 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 680px;
+    z-index: 10;
+  }
+
+  .desktop-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 107, 0, 0.08) 0%, rgba(11, 11, 12, 0) 70%);
+    padding: 2rem;
+    z-index: 5;
+  }
+
+  /* Realistic Device Frame (iPhone-like Mockup) */
+  .phone-mockup {
+    position: relative;
+    width: 375px;
+    height: 770px;
+    background-color: #0B0B0C;
+    border: 12px solid #242426;
+    border-radius: 48px;
+    box-shadow: 
+      0 25px 60px -15px rgba(0, 0, 0, 0.9), 
+      0 0 0 3px #1a1a1b,
+      inset 0 0 12px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+  }
+
+  .phone-mockup:hover {
+    transform: translateY(-5px) scale(1.01);
+  }
+
+  /* Notch (Camera & Speaker Area) */
+  .phone-notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px;
+    height: 28px;
+    background-color: #242426;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Speaker line */
+  .phone-notch::before {
+    content: '';
+    width: 35px;
+    height: 4px;
+    background-color: #111;
+    border-radius: 2px;
+  }
+
+  /* Camera lens dot */
+  .phone-notch::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background-color: #111;
+    border-radius: 50%;
+  }
+
+  /* The actual screen content container inside phone mockup */
+  .phone-screen {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 36px;
+    position: relative;
+  }
+}
+
