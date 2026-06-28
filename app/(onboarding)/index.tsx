@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppState, calculateFitnessMetrics, UserProfile } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
@@ -180,12 +180,14 @@ export default function OnboardingScreen() {
   const totalSteps = 4;
   const currentStep = step === 1 ? 1 : step === 2 ? 2 : step === 3 ? 3 : 4;
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
+
+  const content = (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+    >
         {/* Top bar */}
       <View style={{
         paddingHorizontal: 20,
@@ -799,6 +801,34 @@ export default function OnboardingScreen() {
         )}
       </ScrollView>
       </KeyboardAvoidingView>
+  );
+
+  if (isDesktop) {
+    return (
+      <View style={{ flex: 1, backgroundColor: c.bg, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <View style={{
+          width: 450,
+          height: '100%',
+          maxHeight: 700,
+          backgroundColor: c.surface,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: c.border,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.35,
+          shadowRadius: 24,
+          overflow: 'hidden',
+        }}>
+          {content}
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
+      {content}
     </SafeAreaView>
   );
 }

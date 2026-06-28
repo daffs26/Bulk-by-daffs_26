@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Alert, useWindowDimensions } from 'react-native';
 import { useAppState } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
 import { Scale, Plus, Calendar, ChevronRight } from 'lucide-react-native';
@@ -49,6 +49,267 @@ export default function ProgressScreen() {
     Alert.alert('Sukses', `Berat badan ${weightNum} kg berhasil dicatat.`);
   };
 
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
+
+  const weightCard = (
+    <View style={{
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 24,
+      padding: 24,
+    }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <View>
+          <Text style={{
+            fontSize: 10,
+            fontFamily: 'Outfit_600SemiBold',
+            color: c.textMuted,
+            letterSpacing: 0.8,
+            textTransform: 'uppercase',
+            marginBottom: 4,
+          }}>
+            Weight Progression
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+            <Text style={{
+              fontSize: 36,
+              fontFamily: 'Outfit_800ExtraBold',
+              color: c.text,
+              letterSpacing: -1,
+            }}>
+              {currentWeight}
+            </Text>
+            <Text style={{
+              fontSize: 14,
+              fontFamily: 'Outfit_500Medium',
+              color: c.textSub,
+            }}>
+              kg
+            </Text>
+          </View>
+        </View>
+        <Scale color={Accent.primary} size={28} />
+      </View>
+
+      {/* Progress bar */}
+      <View style={{ marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+          <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted }}>Start: {startWeight} kg</Text>
+          <Text style={{ fontSize: 11, fontFamily: 'Outfit_800ExtraBold', color: Accent.primary }}>{progressPercent}%</Text>
+          <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted }}>Target: {targetWeight} kg</Text>
+        </View>
+        <View style={{ height: 6, backgroundColor: c.surface3, borderRadius: 999, overflow: 'hidden' }}>
+          <LinearGradient
+            colors={[Accent.primary, Accent.primaryLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              height: '100%',
+              width: `${progressPercent}%`,
+              borderRadius: 999,
+            }}
+          />
+        </View>
+      </View>
+
+      {/* Quick weight input */}
+      <View style={{
+        flexDirection: 'row',
+        gap: 10,
+        alignItems: 'center',
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: c.border,
+      }}>
+        <TextInput
+          placeholder="Log berat baru..."
+          placeholderTextColor={c.textMuted}
+          keyboardType="numeric"
+          value={inputWeight}
+          onChangeText={setInputWeight}
+          style={{
+            flex: 1,
+            paddingHorizontal: 16,
+            height: 40,
+            borderRadius: 14,
+            backgroundColor: c.surface2,
+            borderWidth: 1,
+            borderColor: c.border,
+            fontFamily: 'Outfit_500Medium',
+            fontSize: 13,
+            color: c.text,
+          }}
+        />
+        <TouchableOpacity
+          onPress={handleLogWeight}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            paddingHorizontal: 16,
+            height: 40,
+            borderRadius: 14,
+            backgroundColor: Accent.primary,
+          }}
+        >
+          <Plus size={14} color="white" />
+          <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: '#FFF' }}>Catat</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const chartCard = (
+    <View style={{
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 24,
+      padding: 24,
+    }}>
+      <Text style={{
+        fontSize: 13,
+        fontFamily: 'Outfit_600SemiBold',
+        color: c.text,
+        letterSpacing: 0.2,
+        marginBottom: 24,
+      }}>
+        Calorie Tracker (Last 7 Days)
+      </Text>
+
+      {/* Chart */}
+      <View style={{
+        height: 140,
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        paddingHorizontal: 4,
+        marginBottom: 12,
+      }}>
+        {last7Days.map((day, idx) => {
+          const barHeight = Math.max(8, Math.round((day.calories / maxCalories) * 120));
+          const isToday = idx === 6;
+
+          return (
+            <View key={day.date} style={{ alignItems: 'center', flex: 1 }}>
+              {isToday ? (
+                <LinearGradient
+                  colors={[Accent.primaryLight, Accent.primary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={{
+                    height: barHeight,
+                    width: 16,
+                    borderTopLeftRadius: 4,
+                    borderTopRightRadius: 4,
+                  }}
+                />
+              ) : (
+                <View style={{
+                  height: barHeight,
+                  width: 16,
+                  borderTopLeftRadius: 4,
+                  borderTopRightRadius: 4,
+                  backgroundColor: c.surface3,
+                }} />
+              )}
+              <Text style={{
+                fontSize: 10,
+                fontFamily: 'Outfit_600SemiBold',
+                marginTop: 8,
+                color: isToday ? Accent.primary : c.textMuted,
+                letterSpacing: 0.2,
+              }}>
+                {day.day}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* Chart legend */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderTopWidth: 1,
+        borderTopColor: c.border,
+        paddingTop: 12,
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: Accent.primary }} />
+          <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted }}>Hari ini</Text>
+        </View>
+        <Text style={{
+          fontSize: 12,
+          fontFamily: 'Outfit_600SemiBold',
+          color: c.text,
+          letterSpacing: -0.2,
+        }}>
+          Avg: {Math.round(last7Days.reduce((acc, d) => acc + d.calories, 0) / 7)} kcal/day
+        </Text>
+      </View>
+    </View>
+  );
+
+  const historyCard = (
+    <View style={{
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 24,
+      padding: 24,
+    }}>
+      <Text style={{
+        fontSize: 13,
+        fontFamily: 'Outfit_600SemiBold',
+        color: c.text,
+        letterSpacing: 0.2,
+        marginBottom: 16,
+      }}>
+        Log History
+      </Text>
+
+      {weightLogs.slice(0, 4).map((log, idx) => (
+        <View
+          key={log.id || idx}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: 10,
+            borderBottomWidth: idx < Math.min(weightLogs.length, 4) - 1 ? 1 : 0,
+            borderBottomColor: c.border,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Calendar size={14} color={c.textMuted} />
+            <Text style={{
+              fontSize: 12,
+              fontFamily: 'Outfit_500Medium',
+              color: c.textSub,
+            }}>
+              {log.date}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{
+              fontSize: 13,
+              fontFamily: 'Outfit_800ExtraBold',
+              color: c.text,
+              letterSpacing: -0.3,
+            }}>
+              {log.weight} kg
+            </Text>
+            <ChevronRight size={12} color={c.textMuted} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingTop: 20 }}>
@@ -74,268 +335,23 @@ export default function ProgressScreen() {
           </Text>
         </View>
 
-        {/* ── Weight Progress Card ── */}
-        <View>
-          <View style={{
-            backgroundColor: c.surface,
-            borderWidth: 1,
-            borderColor: c.border,
-            borderRadius: 24,
-            padding: 24,
-            marginBottom: 16,
-          }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <View>
-                <Text style={{
-                  fontSize: 10,
-                  fontFamily: 'Outfit_600SemiBold',
-                  color: c.textMuted,
-                  letterSpacing: 0.8,
-                  textTransform: 'uppercase',
-                  marginBottom: 4,
-                }}>
-                  Weight Progression
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-                  <Text style={{
-                    fontSize: 36,
-                    fontFamily: 'Outfit_800ExtraBold',
-                    color: c.text,
-                    letterSpacing: -1,
-                  }}>
-                    {currentWeight}
-                  </Text>
-                  <Text style={{
-                    fontSize: 14,
-                    fontFamily: 'Outfit_500Medium',
-                    color: c.textSub,
-                  }}>
-                    kg
-                  </Text>
-                </View>
-              </View>
-              <Scale color={Accent.primary} size={28} />
+        {isDesktop ? (
+          <View style={{ flexDirection: 'row', gap: 20, alignItems: 'flex-start' }}>
+            <View style={{ flex: 1, gap: 16 }}>
+              {weightCard}
+              {historyCard}
             </View>
-
-            {/* Progress bar */}
-            <View style={{ marginBottom: 16 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted }}>Start: {startWeight} kg</Text>
-                <Text style={{ fontSize: 11, fontFamily: 'Outfit_800ExtraBold', color: Accent.primary }}>{progressPercent}%</Text>
-                <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted }}>Target: {targetWeight} kg</Text>
-              </View>
-              <View style={{ height: 6, backgroundColor: c.surface3, borderRadius: 999, overflow: 'hidden' }}>
-                <LinearGradient
-                  colors={[Accent.primary, Accent.primaryLight]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{
-                    height: '100%',
-                    width: `${progressPercent}%`,
-                    borderRadius: 999,
-                  }}
-                />
-              </View>
-            </View>
-
-            {/* Quick weight input */}
-            <View style={{
-              flexDirection: 'row',
-              gap: 10,
-              alignItems: 'center',
-              paddingTop: 12,
-              borderTopWidth: 1,
-              borderTopColor: c.border,
-            }}>
-              <TextInput
-                placeholder="Log berat baru..."
-                placeholderTextColor={c.textMuted}
-                keyboardType="numeric"
-                value={inputWeight}
-                onChangeText={setInputWeight}
-                style={{
-                  flex: 1,
-                  paddingHorizontal: 16,
-                  height: 40,
-                  borderRadius: 14,
-                  backgroundColor: c.surface2,
-                  borderWidth: 1,
-                  borderColor: c.border,
-                  fontFamily: 'Outfit_500Medium',
-                  fontSize: 13,
-                  color: c.text,
-                }}
-              />
-              <TouchableOpacity
-                onPress={handleLogWeight}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 4,
-                  paddingHorizontal: 16,
-                  height: 40,
-                  borderRadius: 14,
-                  backgroundColor: Accent.primary,
-                }}
-              >
-                <Plus size={14} color="white" />
-                <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: '#FFF' }}>Catat</Text>
-              </TouchableOpacity>
+            <View style={{ flex: 1, gap: 16 }}>
+              {chartCard}
             </View>
           </View>
-        </View>
-
-        {/* ── Bar Chart Card ── */}
-        <View>
-          <View style={{
-            backgroundColor: c.surface,
-            borderWidth: 1,
-            borderColor: c.border,
-            borderRadius: 24,
-            padding: 24,
-            marginBottom: 16,
-          }}>
-            <Text style={{
-              fontSize: 13,
-              fontFamily: 'Outfit_600SemiBold',
-              color: c.text,
-              letterSpacing: 0.2,
-              marginBottom: 24,
-            }}>
-              Calorie Tracker (Last 7 Days)
-            </Text>
-
-            {/* Chart */}
-            <View style={{
-              height: 140,
-              flexDirection: 'row',
-              alignItems: 'flex-end',
-              justifyContent: 'space-between',
-              paddingHorizontal: 4,
-              marginBottom: 12,
-            }}>
-              {last7Days.map((day, idx) => {
-                const barHeight = Math.max(8, Math.round((day.calories / maxCalories) * 120));
-                const isToday = idx === 6;
-
-                return (
-                  <View key={day.date} style={{ alignItems: 'center', flex: 1 }}>
-                    {isToday ? (
-                      <LinearGradient
-                        colors={[Accent.primaryLight, Accent.primary]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 0, y: 1 }}
-                        style={{
-                          height: barHeight,
-                          width: 16,
-                          borderTopLeftRadius: 4,
-                          borderTopRightRadius: 4,
-                        }}
-                      />
-                    ) : (
-                      <View style={{
-                        height: barHeight,
-                        width: 16,
-                        borderTopLeftRadius: 4,
-                        borderTopRightRadius: 4,
-                        backgroundColor: c.surface3,
-                      }} />
-                    )}
-                    <Text style={{
-                      fontSize: 10,
-                      fontFamily: 'Outfit_600SemiBold',
-                      marginTop: 8,
-                      color: isToday ? Accent.primary : c.textMuted,
-                      letterSpacing: 0.2,
-                    }}>
-                      {day.day}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-
-            {/* Chart legend */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderTopWidth: 1,
-              borderTopColor: c.border,
-              paddingTop: 12,
-            }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: Accent.primary }} />
-                <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted }}>Hari ini</Text>
-              </View>
-              <Text style={{
-                fontSize: 12,
-                fontFamily: 'Outfit_600SemiBold',
-                color: c.text,
-                letterSpacing: -0.2,
-              }}>
-                Avg: {Math.round(last7Days.reduce((acc, d) => acc + d.calories, 0) / 7)} kcal/day
-              </Text>
-            </View>
+        ) : (
+          <View style={{ gap: 16 }}>
+            {weightCard}
+            {chartCard}
+            {historyCard}
           </View>
-        </View>
-
-        {/* ── Weight Log History ── */}
-        <View>
-          <View style={{
-            backgroundColor: c.surface,
-            borderWidth: 1,
-            borderColor: c.border,
-            borderRadius: 24,
-            padding: 24,
-          }}>
-            <Text style={{
-              fontSize: 13,
-              fontFamily: 'Outfit_600SemiBold',
-              color: c.text,
-              letterSpacing: 0.2,
-              marginBottom: 16,
-            }}>
-              Log History
-            </Text>
-
-            {weightLogs.slice(0, 4).map((log, idx) => (
-              <View
-                key={log.id || idx}
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingVertical: 10,
-                  borderBottomWidth: idx < Math.min(weightLogs.length, 4) - 1 ? 1 : 0,
-                  borderBottomColor: c.border,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Calendar size={14} color={c.textMuted} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontFamily: 'Outfit_500Medium',
-                    color: c.textSub,
-                  }}>
-                    {log.date}
-                  </Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{
-                    fontSize: 13,
-                    fontFamily: 'Outfit_800ExtraBold',
-                    color: c.text,
-                    letterSpacing: -0.3,
-                  }}>
-                    {log.weight} kg
-                  </Text>
-                  <ChevronRight size={12} color={c.textMuted} />
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
+        )}
 
       </ScrollView>
     </SafeAreaView>

@@ -8,7 +8,8 @@ import {
   Alert, 
   Image, 
   TextInput, 
-  ScrollView 
+  ScrollView,
+  useWindowDimensions
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppState } from '@/hooks/useAppState';
@@ -485,9 +486,18 @@ Return only this JSON array, no markdown wrappers (like \`\`\`json), and no conv
     setBarcodeQuery('');
   };
 
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
-      {/* Header */}
+      <View style={{
+        flex: 1,
+        alignSelf: isDesktop ? 'center' : 'stretch',
+        width: isDesktop ? 650 : '100%',
+        maxWidth: '100%',
+      }}>
+        {/* Header */}
       <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 }}>
         <Text style={{
           fontSize: 22,
@@ -1811,6 +1821,7 @@ Return only this JSON array, no markdown wrappers (like \`\`\`json), and no conv
           </View>
         )}
 
+      </View>
       </View>
     </SafeAreaView>
   );

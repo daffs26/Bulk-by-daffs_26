@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, SafeAreaView, FlatList, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, SafeAreaView, FlatList, Modal, Alert, useWindowDimensions } from 'react-native';
 import { useAppState, FoodLog } from '@/hooks/useAppState';
 import { FOOD_DATABASE, DBFood } from '@/constants/foods';
 import { Colors, Accent } from '@/constants/theme';
@@ -14,6 +14,8 @@ const MEAL_COLORS: Record<string, string> = {
 
 export default function FoodDiaryScreen() {
   const { foodLogs, addFoodLog, deleteFoodLog, theme } = useAppState();
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
   const c = Colors[theme];
   const isDark = theme === 'dark';
   const today = new Date().toISOString().split('T')[0];
@@ -164,103 +166,209 @@ export default function FoodDiaryScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} style={{ paddingHorizontal: 20 }}>
-        {meals.map((meal) => {
-          const mealLogs = todayFoods.filter((f) => f.mealType === meal.type);
-          const mealCalories = mealLogs.reduce((acc, f) => acc + f.calories, 0);
-          const mealColor = MEAL_COLORS[meal.type];
+        {isDesktop ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 20, marginTop: 16 }}>
+            {meals.map((meal) => {
+              const mealLogs = todayFoods.filter((f) => f.mealType === meal.type);
+              const mealCalories = mealLogs.reduce((acc, f) => acc + f.calories, 0);
+              const mealColor = MEAL_COLORS[meal.type];
 
-          return (
-            <View key={meal.type} style={{ marginTop: 20 }}>
-              {/* Meal header */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: mealColor,
-                  }} />
-                  <View>
-                    <Text style={{
-                      fontSize: 15,
-                      fontFamily: 'Outfit_600SemiBold',
-                      color: c.text,
-                      letterSpacing: -0.1,
+              return (
+                <View key={meal.type} style={{
+                  flex: 1,
+                  minWidth: '45%',
+                  backgroundColor: c.surface,
+                  borderRadius: 24,
+                  padding: 20,
+                  borderWidth: 1,
+                  borderColor: c.border,
+                }}>
+                  {/* Meal header */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <View style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: mealColor,
+                      }} />
+                      <View>
+                        <Text style={{
+                          fontSize: 15,
+                          fontFamily: 'Outfit_600SemiBold',
+                          color: c.text,
+                          letterSpacing: -0.1,
+                        }}>
+                          {meal.emoji} {meal.title}
+                        </Text>
+                        <Text style={{
+                          fontSize: 11,
+                          fontFamily: 'Outfit_500Medium',
+                          color: c.textMuted,
+                          letterSpacing: 0.2,
+                        }}>
+                          {mealCalories} kcal
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedMealType(meal.type);
+                        setModalVisible(true);
+                      }}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 10,
+                        backgroundColor: Accent.pale,
+                      }}
+                    >
+                      <Plus size={14} color={Accent.primary} />
+                      <Text style={{
+                        fontSize: 12,
+                        fontFamily: 'Outfit_600SemiBold',
+                        color: Accent.primary,
+                      }}>
+                        Tambah
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {mealLogs.length > 0 ? (
+                    <View style={{ gap: 4 }}>{mealLogs.map(renderLoggedFoodItem)}</View>
+                  ) : (
+                    <View style={{
+                      padding: 16,
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderStyle: 'dashed',
+                      borderColor: c.border,
+                      backgroundColor: isDark ? 'rgba(22,22,24,0.4)' : 'rgba(244,244,245,0.4)',
                     }}>
-                      {meal.emoji} {meal.title}
-                    </Text>
+                      <Text style={{
+                        fontSize: 12,
+                        fontFamily: 'Outfit_500Medium',
+                        color: c.textMuted,
+                      }}>
+                        Belum ada makanan dicatat.
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          meals.map((meal) => {
+            const mealLogs = todayFoods.filter((f) => f.mealType === meal.type);
+            const mealCalories = mealLogs.reduce((acc, f) => acc + f.calories, 0);
+            const mealColor = MEAL_COLORS[meal.type];
+
+            return (
+              <View key={meal.type} style={{ marginTop: 20 }}>
+                {/* Meal header */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: mealColor,
+                    }} />
+                    <View>
+                      <Text style={{
+                        fontSize: 15,
+                        fontFamily: 'Outfit_600SemiBold',
+                        color: c.text,
+                        letterSpacing: -0.1,
+                      }}>
+                        {meal.emoji} {meal.title}
+                      </Text>
+                      <Text style={{
+                        fontSize: 11,
+                        fontFamily: 'Outfit_500Medium',
+                        color: c.textMuted,
+                        letterSpacing: 0.2,
+                      }}>
+                        {mealCalories} kcal
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedMealType(meal.type);
+                      setModalVisible(true);
+                    }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 10,
+                      backgroundColor: Accent.pale,
+                    }}
+                  >
+                    <Plus size={14} color={Accent.primary} />
                     <Text style={{
-                      fontSize: 11,
+                      fontSize: 12,
+                      fontFamily: 'Outfit_600SemiBold',
+                      color: Accent.primary,
+                    }}>
+                      Tambah
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {mealLogs.length > 0 ? (
+                  <View>{mealLogs.map(renderLoggedFoodItem)}</View>
+                ) : (
+                  <View style={{
+                    padding: 16,
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderStyle: 'dashed',
+                    borderColor: c.border,
+                    backgroundColor: isDark ? 'rgba(22,22,24,0.4)' : 'rgba(244,244,245,0.4)',
+                  }}>
+                    <Text style={{
+                      fontSize: 12,
                       fontFamily: 'Outfit_500Medium',
                       color: c.textMuted,
-                      letterSpacing: 0.2,
                     }}>
-                      {mealCalories} kcal
+                      Belum ada makanan dicatat.
                     </Text>
                   </View>
-                </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedMealType(meal.type);
-                    setModalVisible(true);
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 4,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 10,
-                    backgroundColor: Accent.pale,
-                  }}
-                >
-                  <Plus size={14} color={Accent.primary} />
-                  <Text style={{
-                    fontSize: 12,
-                    fontFamily: 'Outfit_600SemiBold',
-                    color: Accent.primary,
-                  }}>
-                    Tambah
-                  </Text>
-                </TouchableOpacity>
+                )}
               </View>
-
-              {mealLogs.length > 0 ? (
-                <View>{mealLogs.map(renderLoggedFoodItem)}</View>
-              ) : (
-                <View style={{
-                  padding: 16,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderStyle: 'dashed',
-                  borderColor: c.border,
-                  backgroundColor: isDark ? 'rgba(22,22,24,0.4)' : 'rgba(244,244,245,0.4)',
-                }}>
-                  <Text style={{
-                    fontSize: 12,
-                    fontFamily: 'Outfit_500Medium',
-                    color: c.textMuted,
-                  }}>
-                    Belum ada makanan dicatat.
-                  </Text>
-                </View>
-              )}
-            </View>
-          );
-        })}
+            );
+          })
+        )}
       </ScrollView>
 
       {/* ── Modal ── */}
-      <Modal animationType="slide" transparent visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.75)' }}>
+      <Modal animationType="fade" transparent visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+        <View style={{
+          flex: 1,
+          justifyContent: isDesktop ? 'center' : 'flex-end',
+          alignItems: isDesktop ? 'center' : 'stretch',
+          backgroundColor: 'rgba(0,0,0,0.75)',
+          padding: isDesktop ? 24 : 0,
+        }}>
           <View style={{
-            height: '80%',
+            width: isDesktop ? 500 : '100%',
+            height: isDesktop ? '90%' : '80%',
+            maxHeight: isDesktop ? 650 : undefined,
+            borderRadius: isDesktop ? 24 : 0,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             backgroundColor: c.surface,
             padding: 24,
-            borderTopWidth: 1,
-            borderTopColor: c.border,
+            borderWidth: isDesktop ? 1 : 0,
+            borderColor: c.border,
           }}>
             {/* Modal handle */}
             <View style={{

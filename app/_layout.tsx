@@ -101,20 +101,7 @@ function AppLayoutContent() {
 
   const c = Colors[theme];
 
-  // Determine showing landing page or app
-  let showLandingPage = false;
-  if (isWeb) {
-    const hasForceAppQuery = typeof window !== 'undefined' && window.location.search.includes('app=true');
-    if (hostname.includes('bulk-website')) {
-      showLandingPage = !hasForceAppQuery; // Always landing page on website domain unless app=true is requested
-    } else {
-      showLandingPage = false; // App domain and localhost always show the mobile app directly
-    }
-  }
-
-
-  /* ── The actual mobile app (rendered inside phone mockup on desktop, or full-screen on mobile) ── */
-  const appContent = (
+  return (
     <View style={[s.appContent, { backgroundColor: c.bg }]}>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
@@ -123,20 +110,6 @@ function AppLayoutContent() {
       </Stack>
     </View>
   );
-
-  if (showLandingPage) {
-    return (
-      <View style={s.desktopRoot}>
-        <DesktopLandingPage
-          appContent={appContent}
-          onInstallClick={handleInstallClick}
-          isInstalled={isInstalled}
-        />
-      </View>
-    );
-  }
-
-  return appContent;
 }
 
 const s = StyleSheet.create({

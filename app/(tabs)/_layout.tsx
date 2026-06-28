@@ -3,29 +3,35 @@ import { Tabs } from 'expo-router';
 import { useAppState } from '@/hooks/useAppState';
 import { Home, Utensils, Camera, TrendingUp, User } from 'lucide-react-native';
 import { Colors, Accent } from '@/constants/theme';
+import { View, useWindowDimensions } from 'react-native';
+import Sidebar from '@/components/Sidebar';
 
 export default function TabLayout() {
   const { theme } = useAppState();
-
-  const isDark = theme === 'dark';
+  const { width } = useWindowDimensions();
   const c = Colors[theme];
+  const isDesktop = width > 768;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: Accent.primary,
-        tabBarInactiveTintColor: c.textMuted,
-        tabBarStyle: {
-          backgroundColor: c.surface,
-          borderTopColor: c.border,
-          borderTopWidth: 1,
-          height: 72,
-          paddingBottom: 12,
-          paddingTop: 10,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
+    <View style={{ flex: 1, flexDirection: isDesktop ? 'row' : 'column' }}>
+      {isDesktop && <Sidebar />}
+      <View style={{ flex: 1 }}>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: Accent.primary,
+            tabBarInactiveTintColor: c.textMuted,
+            tabBarStyle: {
+              display: isDesktop ? 'none' : 'flex',
+              backgroundColor: c.surface,
+              borderTopColor: c.border,
+              borderTopWidth: 1,
+              height: 72,
+              paddingBottom: 12,
+              paddingTop: 10,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
         tabBarLabelStyle: {
           fontFamily: 'Outfit_600SemiBold',
           fontSize: 10,
@@ -74,5 +80,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+      </View>
+    </View>
   );
 }

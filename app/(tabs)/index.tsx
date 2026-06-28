@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StyleSheet, useWindowDimensions } from 'react-native';
 import { useAppState } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
 import { Flame, Droplet, FlameKindling, Plus, Zap } from 'lucide-react-native';
@@ -122,6 +122,295 @@ export default function DashboardScreen() {
     addWater(ml);
   };
 
+  const calorieCard = (
+    <LinearGradient
+      colors={[Accent.primary, Accent.primaryDark]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{
+        borderRadius: 24,
+        padding: 24,
+      }}
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <View>
+          <Text style={{
+            fontSize: 10,
+            fontFamily: 'Outfit_600SemiBold',
+            color: 'rgba(255,255,255,0.7)',
+            letterSpacing: 0.8,
+            textTransform: 'uppercase',
+            marginBottom: 8,
+          }}>
+            Energy Balance
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+            <Text style={{
+              fontSize: 52,
+              fontFamily: 'Outfit_800ExtraBold',
+              color: '#FFFFFF',
+              lineHeight: 56,
+              letterSpacing: -1.5,
+            }}>
+              {caloriesEaten}
+            </Text>
+            <Text style={{
+              fontSize: 15,
+              fontFamily: 'Outfit_500Medium',
+              color: 'rgba(255,255,255,0.75)',
+            }}>
+              / {targetCalories} kcal
+            </Text>
+          </View>
+        </View>
+        <View style={{ opacity: 0.75 }}>
+          <Flame color="white" size={48} />
+        </View>
+      </View>
+
+      {/* Progress bar */}
+      <View style={{
+        height: 6,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 999,
+        marginTop: 20,
+        overflow: 'hidden',
+      }}>
+        <View style={{
+          height: '100%',
+          width: `${caloriePercent * 100}%`,
+          backgroundColor: '#FFFFFF',
+          borderRadius: 999,
+        }} />
+      </View>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+        <Text style={{
+          fontSize: 12,
+          fontFamily: 'Outfit_500Medium',
+          color: 'rgba(255,255,255,0.6)',
+        }}>
+          Target: {targetCalories} kcal
+        </Text>
+        <Text style={{
+          fontSize: 12,
+          fontFamily: 'Outfit_800ExtraBold',
+          color: '#FFFFFF',
+        }}>
+          Remaining: {caloriesRemaining} kcal
+        </Text>
+      </View>
+    </LinearGradient>
+  );
+
+  const macroCard = (
+    <View style={{
+      backgroundColor: c.surface,
+      borderColor: c.border,
+      borderWidth: 1,
+      borderRadius: 24,
+      padding: 24,
+    }}>
+      <Text style={{
+        fontSize: 13,
+        fontFamily: 'Outfit_600SemiBold',
+        color: c.text,
+        letterSpacing: 0.2,
+        marginBottom: 20,
+      }}>
+        Nutrients Distribution
+      </Text>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+        <MacroRing
+          label="Protein"
+          current={proteinEaten}
+          target={targetProtein}
+          color={Accent.primary}
+          textColor={c.text}
+        />
+        <MacroRing
+          label="Carbs"
+          current={carbsEaten}
+          target={targetCarbs}
+          color="#3B82F6"
+          textColor={c.text}
+        />
+        <MacroRing
+          label="Fat"
+          current={fatEaten}
+          target={targetFat}
+          color="#F59E0B"
+          textColor={c.text}
+        />
+      </View>
+    </View>
+  );
+
+  const waterCard = (
+    <View style={{
+      backgroundColor: c.surface,
+      borderColor: c.border,
+      borderWidth: 1,
+      borderRadius: 24,
+      padding: 24,
+    }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <View>
+          <Text style={{
+            fontSize: 10,
+            fontFamily: 'Outfit_600SemiBold',
+            color: c.textMuted,
+            letterSpacing: 0.8,
+            textTransform: 'uppercase',
+            marginBottom: 4,
+          }}>
+            Water Intake
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+            <Text style={{
+              fontSize: 28,
+              fontFamily: 'Outfit_800ExtraBold',
+              color: c.text,
+              letterSpacing: -0.8,
+            }}>
+              {waterLoggedMl}
+            </Text>
+            <Text style={{
+              fontSize: 13,
+              fontFamily: 'Outfit_500Medium',
+              color: c.textSub,
+            }}>
+              / {waterGoal} ml
+            </Text>
+          </View>
+        </View>
+        <View>
+          <Droplet color={Accent.primary} size={32} />
+        </View>
+      </View>
+
+      {/* Water progress */}
+      <View style={{
+        height: 6,
+        backgroundColor: c.surface3,
+        borderRadius: 999,
+        marginBottom: 16,
+        overflow: 'hidden',
+      }}>
+        <View style={{
+          height: '100%',
+          width: `${waterPercent * 100}%`,
+          backgroundColor: Accent.primary,
+          borderRadius: 999,
+        }} />
+      </View>
+
+      {/* Water buttons */}
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <TouchableOpacity
+          onPress={() => handleAddWater(250)}
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            paddingVertical: 12,
+            borderRadius: 14,
+            backgroundColor: c.surface2,
+            borderWidth: 1,
+            borderColor: c.border,
+          }}
+        >
+          <Plus size={14} color={c.text} />
+          <Text style={{
+            fontSize: 12,
+            fontFamily: 'Outfit_600SemiBold',
+            color: c.text,
+          }}>
+            +250ml
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => handleAddWater(500)}
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            paddingVertical: 12,
+            borderRadius: 14,
+            backgroundColor: c.surface2,
+            borderWidth: 1,
+            borderColor: c.border,
+          }}
+        >
+          <Plus size={14} color={c.text} />
+          <Text style={{
+            fontSize: 12,
+            fontFamily: 'Outfit_600SemiBold',
+            color: c.text,
+          }}>
+            +500ml
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={resetWater}
+          style={{
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderRadius: 14,
+            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+          }}
+        >
+          <Text style={{
+            fontSize: 12,
+            fontFamily: 'Outfit_600SemiBold',
+            color: '#EF4444',
+          }}>
+            Reset
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const tipCard = (
+    <View style={{
+      borderRadius: 24,
+      padding: 20,
+      backgroundColor: Accent.pale,
+      borderWidth: 1,
+      borderColor: Accent.glow,
+      borderLeftWidth: 4,
+      borderLeftColor: Accent.primary,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+        <Zap size={14} color={Accent.primary} />
+        <Text style={{
+          fontSize: 13,
+          fontFamily: 'Outfit_600SemiBold',
+          color: Accent.primary,
+          letterSpacing: 0.2,
+        }}>
+          Daily Lifestyle Tip
+        </Text>
+      </View>
+      <Text style={{
+        fontSize: 12,
+        fontFamily: 'Outfit_500Medium',
+        color: isDark ? 'rgba(255, 140, 51, 0.7)' : 'rgba(224, 92, 0, 0.8)',
+        lineHeight: 20,
+      }}>
+        Untuk memaksimalkan goal {userProfile?.goal.toUpperCase() || 'MAINTENANCE'} kamu, pastikan tidur 7-8 jam malam ini dan pertahankan asupan air minum harianmu.
+      </Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingTop: 20 }}>
@@ -169,301 +458,26 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* ── Calorie Hero Card (Gradient Orange) ── */}
-        <View>
-          <LinearGradient
-            colors={[Accent.primary, Accent.primaryDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              borderRadius: 24,
-              padding: 24,
-              marginBottom: 16,
-            }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View>
-                <Text style={{
-                  fontSize: 10,
-                  fontFamily: 'Outfit_600SemiBold',
-                  color: 'rgba(255,255,255,0.7)',
-                  letterSpacing: 0.8,
-                  textTransform: 'uppercase',
-                  marginBottom: 8,
-                }}>
-                  Energy Balance
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-                  <Text style={{
-                    fontSize: 52,
-                    fontFamily: 'Outfit_800ExtraBold',
-                    color: '#FFFFFF',
-                    lineHeight: 56,
-                    letterSpacing: -1.5,
-                  }}>
-                    {caloriesEaten}
-                  </Text>
-                  <Text style={{
-                    fontSize: 15,
-                    fontFamily: 'Outfit_500Medium',
-                    color: 'rgba(255,255,255,0.75)',
-                  }}>
-                    / {targetCalories} kcal
-                  </Text>
-                </View>
-              </View>
-              <View style={{ opacity: 0.75 }}>
-                <Flame color="white" size={48} />
-              </View>
+        {/* ── Responsive Columns Content ── */}
+        {isDesktop ? (
+          <View style={{ flexDirection: 'row', gap: 20, alignItems: 'flex-start' }}>
+            <View style={{ flex: 1.2, gap: 16 }}>
+              {calorieCard}
+              {macroCard}
             </View>
-
-            {/* Progress bar */}
-            <View style={{
-              height: 6,
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              borderRadius: 999,
-              marginTop: 20,
-              overflow: 'hidden',
-            }}>
-              <View style={{
-                height: '100%',
-                width: `${caloriePercent * 100}%`,
-                backgroundColor: '#FFFFFF',
-                borderRadius: 999,
-              }} />
-            </View>
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-              <Text style={{
-                fontSize: 12,
-                fontFamily: 'Outfit_500Medium',
-                color: 'rgba(255,255,255,0.6)',
-              }}>
-                Target: {targetCalories} kcal
-              </Text>
-              <Text style={{
-                fontSize: 12,
-                fontFamily: 'Outfit_800ExtraBold',
-                color: '#FFFFFF',
-              }}>
-                Remaining: {caloriesRemaining} kcal
-              </Text>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* ── Macro Rings Card ── */}
-        <View>
-          <View style={{
-            backgroundColor: c.surface,
-            borderColor: c.border,
-            borderWidth: 1,
-            borderRadius: 24,
-            padding: 24,
-            marginBottom: 16,
-          }}>
-            <Text style={{
-              fontSize: 13,
-              fontFamily: 'Outfit_600SemiBold',
-              color: c.text,
-              letterSpacing: 0.2,
-              marginBottom: 20,
-            }}>
-              Nutrients Distribution
-            </Text>
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-              <MacroRing
-                label="Protein"
-                current={proteinEaten}
-                target={targetProtein}
-                color={Accent.primary}
-                textColor={c.text}
-              />
-              <MacroRing
-                label="Carbs"
-                current={carbsEaten}
-                target={targetCarbs}
-                color="#3B82F6"
-                textColor={c.text}
-              />
-              <MacroRing
-                label="Fat"
-                current={fatEaten}
-                target={targetFat}
-                color="#F59E0B"
-                textColor={c.text}
-              />
+            <View style={{ flex: 0.8, gap: 16 }}>
+              {waterCard}
+              {tipCard}
             </View>
           </View>
-        </View>
-
-        {/* ── Water Tracker ── */}
-        <View>
-          <View style={{
-            backgroundColor: c.surface,
-            borderColor: c.border,
-            borderWidth: 1,
-            borderRadius: 24,
-            padding: 24,
-            marginBottom: 16,
-          }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <View>
-                <Text style={{
-                  fontSize: 10,
-                  fontFamily: 'Outfit_600SemiBold',
-                  color: c.textMuted,
-                  letterSpacing: 0.8,
-                  textTransform: 'uppercase',
-                  marginBottom: 4,
-                }}>
-                  Water Intake
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-                  <Text style={{
-                    fontSize: 28,
-                    fontFamily: 'Outfit_800ExtraBold',
-                    color: c.text,
-                    letterSpacing: -0.8,
-                  }}>
-                    {waterLoggedMl}
-                  </Text>
-                  <Text style={{
-                    fontSize: 13,
-                    fontFamily: 'Outfit_500Medium',
-                    color: c.textSub,
-                  }}>
-                    / {waterGoal} ml
-                  </Text>
-                </View>
-              </View>
-              <View>
-                <Droplet color={Accent.primary} size={32} />
-              </View>
-            </View>
-
-            {/* Water progress */}
-            <View style={{
-              height: 6,
-              backgroundColor: c.surface3,
-              borderRadius: 999,
-              marginBottom: 16,
-              overflow: 'hidden',
-            }}>
-              <View style={{
-                height: '100%',
-                width: `${waterPercent * 100}%`,
-                backgroundColor: Accent.primary,
-                borderRadius: 999,
-              }} />
-            </View>
-
-            {/* Water buttons */}
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <TouchableOpacity
-                onPress={() => handleAddWater(250)}
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 4,
-                  paddingVertical: 12,
-                  borderRadius: 14,
-                  backgroundColor: c.surface2,
-                  borderWidth: 1,
-                  borderColor: c.border,
-                }}
-              >
-                <Plus size={14} color={c.text} />
-                <Text style={{
-                  fontSize: 12,
-                  fontFamily: 'Outfit_600SemiBold',
-                  color: c.text,
-                }}>
-                  +250ml
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => handleAddWater(500)}
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 4,
-                  paddingVertical: 12,
-                  borderRadius: 14,
-                  backgroundColor: c.surface2,
-                  borderWidth: 1,
-                  borderColor: c.border,
-                }}
-              >
-                <Plus size={14} color={c.text} />
-                <Text style={{
-                  fontSize: 12,
-                  fontFamily: 'Outfit_600SemiBold',
-                  color: c.text,
-                }}>
-                  +500ml
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={resetWater}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  borderRadius: 14,
-                  backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                }}
-              >
-                <Text style={{
-                  fontSize: 12,
-                  fontFamily: 'Outfit_600SemiBold',
-                  color: '#EF4444',
-                }}>
-                  Reset
-                </Text>
-              </TouchableOpacity>
-            </View>
+        ) : (
+          <View style={{ gap: 16 }}>
+            {calorieCard}
+            {macroCard}
+            {waterCard}
+            {tipCard}
           </View>
-        </View>
-
-        {/* ── Daily Lifestyle Tip ── */}
-        <View>
-          <View style={{
-            borderRadius: 24,
-            padding: 20,
-            backgroundColor: Accent.pale,
-            borderWidth: 1,
-            borderColor: Accent.glow,
-            borderLeftWidth: 4,
-            borderLeftColor: Accent.primary,
-          }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-              <Zap size={14} color={Accent.primary} />
-              <Text style={{
-                fontSize: 13,
-                fontFamily: 'Outfit_600SemiBold',
-                color: Accent.primary,
-                letterSpacing: 0.2,
-              }}>
-                Daily Lifestyle Tip
-              </Text>
-            </View>
-            <Text style={{
-              fontSize: 12,
-              fontFamily: 'Outfit_500Medium',
-              color: isDark ? 'rgba(255, 140, 51, 0.7)' : 'rgba(224, 92, 0, 0.8)',
-              lineHeight: 20,
-            }}>
-              Untuk memaksimalkan goal {userProfile?.goal.toUpperCase() || 'MAINTENANCE'} kamu, pastikan tidur 7-8 jam malam ini dan pertahankan asupan air minum harianmu.
-            </Text>
-          </View>
-        </View>
+        )}
 
       </ScrollView>
     </SafeAreaView>
