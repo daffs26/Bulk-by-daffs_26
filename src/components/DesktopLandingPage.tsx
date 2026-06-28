@@ -238,28 +238,28 @@ export default function DesktopLandingPage({ appContent, onInstallClick, isInsta
               <Text style={s.terminalTitle}>install_wizard.sh</Text>
             </View>
             <View style={s.terminalBody}>
-              <Text style={s.terminalLine}>$ npm install -g bulk-nutrition-tracker</Text>
-              <Text style={s.terminalLine}>$ bulk-cli --mode offline-pwa</Text>
+              <Text style={s.terminalLine}>$ curl -O https://bulk-website-daffs26.vercel.app/downloads/bulk-app.apk</Text>
+              <Text style={s.terminalLine}>$ install bulk-app.apk</Text>
               <Text style={[s.terminalLine, { color: O, marginVertical: 8 }]}>
-                &gt;&gt; Ready to mount Web App to local workstation
+                &gt;&gt; Ready to install native Android package
               </Text>
               
               <View style={{ gap: 8, marginTop: 8 }}>
                 <Pressable
-                  onPress={onInstallClick}
+                  onPress={() => {
+                    if (Platform.OS === 'web') {
+                      window.open('/downloads/bulk-app.apk', '_blank');
+                    }
+                  }}
                   style={({ pressed }) => [s.terminalCTA, pressed && { opacity: 0.9, transform: [{ translateY: 1 }] }]}
                 >
                   <Text style={s.terminalCTAText}>
-                    {isInstalled ? 'APLIKASI SUDAH TERPASANG' : 'INISIASI INSTALASI SEKARANG'}
+                    UNDUH ANDROID APK (NATIVE)
                   </Text>
                 </Pressable>
 
                 <Pressable
-                  onPress={() => {
-                    if (Platform.OS === 'web') {
-                      window.open('https://bulk-app-daffs26.vercel.app/', '_blank');
-                    }
-                  }}
+                  onPress={onInstallClick}
                   style={({ pressed }) => [
                     s.terminalCTA,
                     { backgroundColor: 'transparent', borderWidth: 1, borderColor: O, marginTop: 0 },
@@ -267,7 +267,7 @@ export default function DesktopLandingPage({ appContent, onInstallClick, isInsta
                   ]}
                 >
                   <Text style={[s.terminalCTAText, { color: O }]}>
-                    JALANKAN DI BROWSER
+                    {isInstalled ? 'VERSI WEB SUDAH TERPASANG' : 'PASANG SEBAGAI PWA (MOBILE WEB)'}
                   </Text>
                 </Pressable>
               </View>

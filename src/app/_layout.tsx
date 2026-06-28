@@ -14,7 +14,20 @@ import {
 import { Platform, useWindowDimensions, View, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/theme';
 import DesktopLandingPage from '@/components/DesktopLandingPage';
+import { SQLiteProvider } from 'expo-sqlite';
+import { initializeDatabase } from '@/config/db';
 import '../global.css';
+
+function AppDatabaseProvider({ children }: { children: React.ReactNode }) {
+  if (Platform.OS === 'web') {
+    return <>{children}</>;
+  }
+  return (
+    <SQLiteProvider databaseName="bulk.db" onInit={initializeDatabase}>
+      {children}
+    </SQLiteProvider>
+  );
+}
 
 function AppLayoutContent() {
   const { isOnboarded, theme } = useAppState();
@@ -91,12 +104,10 @@ function AppLayoutContent() {
   // Determine showing landing page or app
   let showLandingPage = false;
   if (isWeb) {
-    if (hostname.includes('bulk-app')) {
-      showLandingPage = false; // Always app on app domain
-    } else if (hostname.includes('bulk-website')) {
+    if (hostname.includes('bulk-website')) {
       showLandingPage = true; // Always landing page on website domain
     } else {
-      showLandingPage = width >= 1024; // Localhost/other domains fallback
+      showLandingPage = width >= 1024; // Localhost/other domains fallback (desktop gets landing page, mobile gets app preview)
     }
   }
 
@@ -161,8 +172,10 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <AppStateProvider>
-      <AppLayoutContent />
-    </AppStateProvider>
+    <AppDatabaseProvider>
+      <AppStateProvider>
+        <AppLayoutContent />
+      </AppStateProvider>
+    </AppDatabaseProvider>
   );
 }

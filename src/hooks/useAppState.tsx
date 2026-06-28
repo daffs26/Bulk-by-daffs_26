@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { useSQLiteContext } from 'expo-sqlite';
+
+const useSQLiteSafe = Platform.OS === 'web' ? () => null : useSQLiteContext;
 import { auth, db, isConfigured } from '../config/firebase';
 import { 
   signInWithEmailAndPassword, 
@@ -146,6 +149,7 @@ export const calculateFitnessMetrics = (
 };
 
 export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const dbSqlite = useSQLiteSafe();
   const [user, setUser] = useState<LocalUser | null>(null);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -174,25 +178,95 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setColorScheme(initialTheme);
 
         if (!isConfigured) {
-          // Offline / Local fallback: Load everything from AsyncStorage
+          // Offline / Local fallback
           const storedLocalUser = await AsyncStorage.getItem('@bulk_local_active_user');
           if (storedLocalUser) {
             const parsedUser = JSON.parse(storedLocalUser) as LocalUser;
             setUser(parsedUser);
+            const uid = parsedUser.uid;
 
-            const storedProfile = await AsyncStorage.getItem(getStorageKey('@bulk_user_profile', parsedUser));
-            const storedOnboarded = await AsyncStorage.getItem(getStorageKey('@bulk_is_onboarded', parsedUser));
-            const storedFoods = await AsyncStorage.getItem(getStorageKey('@bulk_food_logs', parsedUser));
-            const storedWeights = await AsyncStorage.getItem(getStorageKey('@bulk_weight_logs', parsedUser));
-            const storedWater = await AsyncStorage.getItem(getStorageKey('@bulk_water_logged', parsedUser));
-            const storedStreak = await AsyncStorage.getItem(getStorageKey('@bulk_streak', parsedUser));
+            if (dbSqlite) {
+              // 1. Fetch User Profile
+              const localDbUser: any = await dbSqlite.getFirstAsync(
+                `SELECT * FROM users WHERE uid = ?;`,
+                [uid]
+              );
+              if (localDbUser) {
+                const profile: UserProfile = {
+                  name: localDbUser.name,
+                  gender: localDbUser.gender,
+                  age: localDbUser.age,
+                  height: localDbUser.height,
+                  weightCurrent: localDbUser.weight_current,
+                  weightTarget: localDbUser.weight_target,
+                  activityLevel: localDbUser.activity_level,
+                  goal: localDbUser.goal,
+                  bmi: localDbUser.bmi,
+                  tdee: localDbUser.tdee,
+                  targetCalories: localDbUser.target_calories,
+                  targetMacros: {
+                    protein: localDbUser.target_protein,
+                    carb: localDbUser.target_carb,
+                    fat: localDbUser.target_fat,
+                  }
+                };
+                setUserProfile(profile);
+                setIsOnboarded(localDbUser.is_onboarded === 1);
+                setStreak(localDbUser.streak || 0);
+              }
 
-            if (storedProfile) setUserProfile(JSON.parse(storedProfile));
-            if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
-            if (storedFoods) setFoodLogs(JSON.parse(storedFoods));
-            if (storedWeights) setWeightLogs(JSON.parse(storedWeights));
-            if (storedWater) setWaterLoggedMl(JSON.parse(storedWater));
-            if (storedStreak) setStreak(JSON.parse(storedStreak));
+              // 2. Fetch Food Logs
+              const dbFoods: any[] = await dbSqlite.getAllAsync(
+                `SELECT * FROM food_logs WHERE user_id = ? ORDER BY date DESC;`,
+                [uid]
+              );
+              const mappedFoods: FoodLog[] = dbFoods.map(f => ({
+                id: f.id,
+                name: f.name,
+                calories: f.calories,
+                protein: f.protein,
+                carbs: f.carbs,
+                fat: f.fat,
+                mealType: f.meal_type,
+                date: f.date
+              }));
+              setFoodLogs(mappedFoods);
+
+              // 3. Fetch Weight Logs
+              const dbWeights: any[] = await dbSqlite.getAllAsync(
+                `SELECT * FROM weight_logs WHERE user_id = ? ORDER BY date DESC;`,
+                [uid]
+              );
+              const mappedWeights: WeightLog[] = dbWeights.map(w => ({
+                id: w.id,
+                weight: w.weight,
+                date: w.date
+              }));
+              setWeightLogs(mappedWeights);
+
+              // 4. Fetch Today's Water
+              const today = new Date().toISOString().split('T')[0];
+              const dbWater: any = await dbSqlite.getFirstAsync(
+                `SELECT ml FROM water_logs WHERE user_id = ? AND date = ?;`,
+                [uid, today]
+              );
+              setWaterLoggedMl(dbWater ? dbWater.ml : 0);
+            } else {
+              // Web Fallback: Load everything from AsyncStorage
+              const storedProfile = await AsyncStorage.getItem(getStorageKey('@bulk_user_profile', parsedUser));
+              const storedOnboarded = await AsyncStorage.getItem(getStorageKey('@bulk_is_onboarded', parsedUser));
+              const storedFoods = await AsyncStorage.getItem(getStorageKey('@bulk_food_logs', parsedUser));
+              const storedWeights = await AsyncStorage.getItem(getStorageKey('@bulk_weight_logs', parsedUser));
+              const storedWater = await AsyncStorage.getItem(getStorageKey('@bulk_water_logged', parsedUser));
+              const storedStreak = await AsyncStorage.getItem(getStorageKey('@bulk_streak', parsedUser));
+
+              if (storedProfile) setUserProfile(JSON.parse(storedProfile));
+              if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
+              if (storedFoods) setFoodLogs(JSON.parse(storedFoods));
+              if (storedWeights) setWeightLogs(JSON.parse(storedWeights));
+              if (storedWater) setWaterLoggedMl(JSON.parse(storedWater));
+              if (storedStreak) setStreak(JSON.parse(storedStreak));
+            }
           }
           return;
         }
@@ -337,6 +411,22 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setWeightLogs(newWeightLogs);
     await AsyncStorage.setItem(getStorageKey('@bulk_weight_logs'), JSON.stringify(newWeightLogs));
 
+    if (dbSqlite) {
+      try {
+        const uid = user?.uid || 'local-user';
+        await dbSqlite.runAsync(
+          `INSERT OR REPLACE INTO users (uid, email, name, gender, age, height, weight_current, weight_target, activity_level, goal, bmi, tdee, target_calories, target_protein, target_carb, target_fat, streak, is_onboarded, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          [uid, user?.email || '', profile.name, profile.gender, profile.age, profile.height, profile.weightCurrent, profile.weightTarget, profile.activityLevel, profile.goal, profile.bmi, profile.tdee, profile.targetCalories, profile.targetMacros.protein, profile.targetMacros.carb, profile.targetMacros.fat, 0, 1, new Date().toISOString()]
+        );
+        await dbSqlite.runAsync(
+          `INSERT OR REPLACE INTO weight_logs (id, user_id, weight, date) VALUES (?, ?, ?, ?);`,
+          [initialLog.id, uid, profile.weightCurrent, today]
+        );
+      } catch (err) {
+        console.error('Error inserting onboarding SQLite:', err);
+      }
+    }
+
     if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       await setDoc(doc(db, 'users', uid), { ...profile, streak: 0 });
@@ -363,6 +453,22 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await AsyncStorage.setItem(getStorageKey('@bulk_streak'), JSON.stringify(newStreak));
     }
 
+    if (dbSqlite) {
+      try {
+        const uid = user?.uid || 'local-user';
+        await dbSqlite.runAsync(
+          `INSERT INTO food_logs (id, user_id, name, calories, protein, carbs, fat, meal_type, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          [newLog.id, uid, food.name, food.calories, food.protein || 0, food.carbs || 0, food.fat || 0, food.mealType, today]
+        );
+        await dbSqlite.runAsync(
+          `UPDATE users SET streak = ? WHERE uid = ?;`,
+          [newStreak, uid]
+        );
+      } catch (err) {
+        console.error('Error adding food log SQLite:', err);
+      }
+    }
+
     if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       await setDoc(doc(db, 'users', uid, 'food_logs', newLog.id), newLog);
@@ -376,6 +482,14 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updatedFoods = foodLogs.filter(f => f.id !== id);
     setFoodLogs(updatedFoods);
     await AsyncStorage.setItem(getStorageKey('@bulk_food_logs'), JSON.stringify(updatedFoods));
+
+    if (dbSqlite) {
+      try {
+        await dbSqlite.runAsync(`DELETE FROM food_logs WHERE id = ?;`, [id]);
+      } catch (err) {
+        console.error('Error deleting food log SQLite:', err);
+      }
+    }
 
     if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
@@ -407,6 +521,22 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await AsyncStorage.setItem(getStorageKey('@bulk_user_profile'), JSON.stringify(updatedProfile));
     }
 
+    if (dbSqlite) {
+      try {
+        const uid = user?.uid || 'local-user';
+        await dbSqlite.runAsync(
+          `INSERT OR REPLACE INTO weight_logs (id, user_id, weight, date) VALUES (?, ?, ?, ?);`,
+          [newLog.id, uid, weight, today]
+        );
+        await dbSqlite.runAsync(
+          `UPDATE users SET weight_current = ? WHERE uid = ?;`,
+          [weight, uid]
+        );
+      } catch (err) {
+        console.error('Error adding weight log SQLite:', err);
+      }
+    }
+
     if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       await setDoc(doc(db, 'users', uid, 'weight_logs', newLog.id), newLog);
@@ -421,6 +551,19 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setWaterLoggedMl(newWater);
     await AsyncStorage.setItem(getStorageKey('@bulk_water_logged'), JSON.stringify(newWater));
 
+    if (dbSqlite) {
+      try {
+        const uid = user?.uid || 'local-user';
+        const today = new Date().toISOString().split('T')[0];
+        await dbSqlite.runAsync(
+          `INSERT OR REPLACE INTO water_logs (user_id, date, ml) VALUES (?, ?, ?);`,
+          [uid, today, newWater]
+        );
+      } catch (err) {
+        console.error('Error adding water log SQLite:', err);
+      }
+    }
+
     if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
       const today = new Date().toISOString().split('T')[0];
@@ -431,6 +574,19 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const resetWater = async () => {
     setWaterLoggedMl(0);
     await AsyncStorage.setItem(getStorageKey('@bulk_water_logged'), JSON.stringify(0));
+
+    if (dbSqlite) {
+      try {
+        const uid = user?.uid || 'local-user';
+        const today = new Date().toISOString().split('T')[0];
+        await dbSqlite.runAsync(
+          `INSERT OR REPLACE INTO water_logs (user_id, date, ml) VALUES (?, ?, 0);`,
+          [uid, today]
+        );
+      } catch (err) {
+        console.error('Error resetting water log SQLite:', err);
+      }
+    }
 
     if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
@@ -454,6 +610,18 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     await AsyncStorage.removeItem(getStorageKey('@bulk_weight_logs'));
     await AsyncStorage.removeItem(getStorageKey('@bulk_water_logged'));
     await AsyncStorage.removeItem(getStorageKey('@bulk_streak'));
+
+    if (dbSqlite) {
+      try {
+        const uid = currentUid || 'local-user';
+        await dbSqlite.runAsync(`DELETE FROM users WHERE uid = ?;`, [uid]);
+        await dbSqlite.runAsync(`DELETE FROM food_logs WHERE user_id = ?;`, [uid]);
+        await dbSqlite.runAsync(`DELETE FROM weight_logs WHERE user_id = ?;`, [uid]);
+        await dbSqlite.runAsync(`DELETE FROM water_logs WHERE user_id = ?;`, [uid]);
+      } catch (err) {
+        console.error('Error resetting data SQLite:', err);
+      }
+    }
 
     if (isConfigured && auth && auth.currentUser) {
       const uid = auth.currentUser.uid;
@@ -488,23 +656,94 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await AsyncStorage.setItem('@bulk_local_active_user', JSON.stringify(localUser));
 
       // Load user local state data
-      const storedProfile = await AsyncStorage.getItem(getStorageKey('@bulk_user_profile', localUser));
-      const storedOnboarded = await AsyncStorage.getItem(getStorageKey('@bulk_is_onboarded', localUser));
-      const storedFoods = await AsyncStorage.getItem(getStorageKey('@bulk_food_logs', localUser));
-      const storedWeights = await AsyncStorage.getItem(getStorageKey('@bulk_weight_logs', localUser));
-      const storedWater = await AsyncStorage.getItem(getStorageKey('@bulk_water_logged', localUser));
-      const storedStreak = await AsyncStorage.getItem(getStorageKey('@bulk_streak', localUser));
+      if (dbSqlite) {
+        const uid = localUser.uid;
+        // 1. Fetch User Profile
+        const localDbUser: any = await dbSqlite.getFirstAsync(
+          `SELECT * FROM users WHERE uid = ?;`,
+          [uid]
+        );
+        if (localDbUser) {
+          const profile: UserProfile = {
+            name: localDbUser.name,
+            gender: localDbUser.gender,
+            age: localDbUser.age,
+            height: localDbUser.height,
+            weightCurrent: localDbUser.weight_current,
+            weightTarget: localDbUser.weight_target,
+            activityLevel: localDbUser.activity_level,
+            goal: localDbUser.goal,
+            bmi: localDbUser.bmi,
+            tdee: localDbUser.tdee,
+            targetCalories: localDbUser.target_calories,
+            targetMacros: {
+              protein: localDbUser.target_protein,
+              carb: localDbUser.target_carb,
+              fat: localDbUser.target_fat,
+            }
+          };
+          setUserProfile(profile);
+          setIsOnboarded(localDbUser.is_onboarded === 1);
+          setStreak(localDbUser.streak || 0);
+        } else {
+          setUserProfile(null);
+          setIsOnboarded(false);
+          setStreak(0);
+        }
 
-      if (storedProfile) setUserProfile(JSON.parse(storedProfile));
-      else setUserProfile(null);
+        // 2. Fetch Food Logs
+        const dbFoods: any[] = await dbSqlite.getAllAsync(
+          `SELECT * FROM food_logs WHERE user_id = ? ORDER BY date DESC;`,
+          [uid]
+        );
+        setFoodLogs(dbFoods.map(f => ({
+          id: f.id,
+          name: f.name,
+          calories: f.calories,
+          protein: f.protein,
+          carbs: f.carbs,
+          fat: f.fat,
+          mealType: f.meal_type,
+          date: f.date
+        })));
 
-      if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
-      else setIsOnboarded(false);
+        // 3. Fetch Weight Logs
+        const dbWeights: any[] = await dbSqlite.getAllAsync(
+          `SELECT * FROM weight_logs WHERE user_id = ? ORDER BY date DESC;`,
+          [uid]
+        );
+        setWeightLogs(dbWeights.map(w => ({
+          id: w.id,
+          weight: w.weight,
+          date: w.date
+        })));
 
-      setFoodLogs(storedFoods ? JSON.parse(storedFoods) : []);
-      setWeightLogs(storedWeights ? JSON.parse(storedWeights) : []);
-      setWaterLoggedMl(storedWater ? JSON.parse(storedWater) : 0);
-      setStreak(storedStreak ? JSON.parse(storedStreak) : 0);
+        // 4. Fetch Today's Water
+        const today = new Date().toISOString().split('T')[0];
+        const dbWater: any = await dbSqlite.getFirstAsync(
+          `SELECT ml FROM water_logs WHERE user_id = ? AND date = ?;`,
+          [uid, today]
+        );
+        setWaterLoggedMl(dbWater ? dbWater.ml : 0);
+      } else {
+        const storedProfile = await AsyncStorage.getItem(getStorageKey('@bulk_user_profile', localUser));
+        const storedOnboarded = await AsyncStorage.getItem(getStorageKey('@bulk_is_onboarded', localUser));
+        const storedFoods = await AsyncStorage.getItem(getStorageKey('@bulk_food_logs', localUser));
+        const storedWeights = await AsyncStorage.getItem(getStorageKey('@bulk_weight_logs', localUser));
+        const storedWater = await AsyncStorage.getItem(getStorageKey('@bulk_water_logged', localUser));
+        const storedStreak = await AsyncStorage.getItem(getStorageKey('@bulk_streak', localUser));
+
+        if (storedProfile) setUserProfile(JSON.parse(storedProfile));
+        else setUserProfile(null);
+
+        if (storedOnboarded) setIsOnboarded(JSON.parse(storedOnboarded));
+        else setIsOnboarded(false);
+
+        setFoodLogs(storedFoods ? JSON.parse(storedFoods) : []);
+        setWeightLogs(storedWeights ? JSON.parse(storedWeights) : []);
+        setWaterLoggedMl(storedWater ? JSON.parse(storedWater) : 0);
+        setStreak(storedStreak ? JSON.parse(storedStreak) : 0);
+      }
       return;
     }
 

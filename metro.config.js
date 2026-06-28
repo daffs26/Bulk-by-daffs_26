@@ -3,4 +3,8 @@ const { withNativeWind } = require("nativewind/metro");
 
 const config = getDefaultConfig(__dirname);
 
+// Support wasm files for expo-sqlite on web
+config.resolver.assetExts.push('wasm');
+
 module.exports = withNativeWind(config, { input: "./src/global.css" });
+
