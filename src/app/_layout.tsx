@@ -13,7 +13,7 @@ import {
 } from '@expo-google-fonts/poppins';
 import { Platform, useWindowDimensions, View, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/theme';
-import DesktopLandingPage from '@/components/DesktopLandingPage';
+import DesktopLandingPage from '@/web/components/DesktopLandingPage';
 import { SQLiteProvider } from 'expo-sqlite';
 import { initializeDatabase } from '@/config/db';
 import '../global.css';
