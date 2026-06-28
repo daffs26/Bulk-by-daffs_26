@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 const O = "#FF6B00";
 const BG = "#0B0B0C";
@@ -483,17 +484,8 @@ const FEATURES = [
   },
 ];
 
-interface Props {
-  appContent: React.ReactNode;
-  onInstallClick: () => void;
-  isInstalled: boolean;
-}
-
-export default function DesktopLandingPage({
-  appContent,
-  onInstallClick,
-  isInstalled,
-}: Props) {
+export default function DesktopLandingPage() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const isMobile = width < 1024;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -537,6 +529,17 @@ export default function DesktopLandingPage({
             style={s.logoIcon}
           />
           <Text style={s.logoText}>BULK</Text>
+        </View>
+        <View style={s.headerRight}>
+          <Pressable
+            onPress={() => router.push('/(onboarding)/login')}
+            style={({ pressed }) => [
+              s.navBtn,
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <Text style={s.navBtnText}>MASUK / DAFTAR</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -607,6 +610,17 @@ export default function DesktopLandingPage({
 
               <View style={{ gap: 8, marginTop: 8 }}>
                 <Pressable
+                  onPress={() => router.push('/(onboarding)/login')}
+                  style={({ pressed }) => [
+                    s.terminalCTA,
+                    { backgroundColor: O },
+                    pressed && { opacity: 0.9, transform: [{ translateY: 1 }] },
+                  ]}
+                >
+                  <Text style={s.terminalCTAText}>MULAI SEKARANG</Text>
+                </Pressable>
+
+                <Pressable
                   onPress={() => {
                     if (Platform.OS === "web") {
                       window.open("https://expo.dev/artifacts/eas/TdXtmbJnIqVDdkA348B4-bg1PxdjrsMUOdIsAGSXGo4.apk", "_blank");
@@ -614,10 +628,11 @@ export default function DesktopLandingPage({
                   }}
                   style={({ pressed }) => [
                     s.terminalCTA,
+                    { backgroundColor: '#222', borderWidth: 1, borderColor: BORD },
                     pressed && { opacity: 0.9, transform: [{ translateY: 1 }] },
                   ]}
                 >
-                  <Text style={s.terminalCTAText}>UNDUH APLIKASI</Text>
+                  <Text style={s.terminalCTAText}>UNDUH APK ANDROID</Text>
                 </Pressable>
               </View>
             </View>
@@ -631,13 +646,15 @@ export default function DesktopLandingPage({
             isMobile && { flex: undefined, minHeight: 480 },
           ]}
         >
-          {/* Phone Shell Wrap with Live Interactive App */}
+          {/* Phone Shell Wrap with Auto Illustration Slider */}
           <View style={s.mockupWrapper}>
             <PhoneMockup size="lg">
               <View
                 style={{ flex: 1, overflow: "hidden", backgroundColor: BG }}
               >
-                {appContent}
+                {currentIndex % 3 === 0 && <IlluDashboard />}
+                {currentIndex % 3 === 1 && <IlluFoodLog />}
+                {currentIndex % 3 === 2 && <IlluProgress />}
               </View>
             </PhoneMockup>
           </View>

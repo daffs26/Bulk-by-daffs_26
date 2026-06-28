@@ -40,13 +40,27 @@ function AppLayoutContent() {
 
   /* ── Navigation guard ── */
   useEffect(() => {
+    const isWeb = Platform.OS === 'web';
+    const atRoot = segments.length === 0 || segments[0] === '';
     const inTabsGroup = segments[0] === '(tabs)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
 
-    if (!isOnboarded && !inOnboardingGroup) {
-      router.replace('/(onboarding)');
-    } else if (isOnboarded && !inTabsGroup) {
-      router.replace('/(tabs)');
+    if (isOnboarded) {
+      if (!inTabsGroup) {
+        router.replace('/(tabs)');
+      }
+    } else {
+      // Guest users
+      if (isWeb) {
+        if (!atRoot && !inOnboardingGroup) {
+          router.replace('/');
+        }
+      } else {
+        // Mobile guest users
+        if (!inOnboardingGroup) {
+          router.replace('/(onboarding)/login');
+        }
+      }
     }
   }, [isOnboarded, segments]);
 
@@ -105,6 +119,7 @@ function AppLayoutContent() {
     <View style={[s.appContent, { backgroundColor: c.bg }]}>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="(onboarding)" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
       </Stack>
