@@ -235,14 +235,14 @@ export default function OnboardingScreen() {
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
 
         {/* ══════════ STEP 0: Google Login ══════════ */}
-        {!user && !showAuthForm && (
-          <View style={{ flexGrow: 1, justifyContent: 'space-between', paddingVertical: 16 }}>
+        {!user && (
+          <View style={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 16 }}>
             {/* Branding Header */}
-            <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 16 }}>
+            <View style={{ alignItems: 'center', marginBottom: 28 }}>
               <View style={{
-                width: 70,
-                height: 70,
-                borderRadius: 22,
+                width: 60,
+                height: 60,
+                borderRadius: 18,
                 backgroundColor: Accent.pale,
                 borderWidth: 1,
                 borderColor: Accent.glow,
@@ -250,177 +250,16 @@ export default function OnboardingScreen() {
                 justifyContent: 'center',
                 marginBottom: 16,
               }}>
-                <Flame size={36} color={Accent.primary} />
+                <Flame size={30} color={Accent.primary} />
               </View>
               <Text style={{
-                fontSize: 32,
+                fontSize: 28,
                 fontFamily: 'Outfit_800ExtraBold',
                 color: c.text,
                 letterSpacing: -1,
                 textAlign: 'center',
               }}>
-                Selamat Datang di <Text style={{ color: Accent.primary }}>BULK</Text>
-              </Text>
-              <Text style={{
-                fontSize: 13,
-                fontFamily: 'Outfit_500Medium',
-                color: c.textSub,
-                marginTop: 8,
-                textAlign: 'center',
-                paddingHorizontal: 24,
-                lineHeight: 20,
-              }}>
-                Pindai porsi makan, analisis gizi mikro/makro, dan raih target kebugaran Anda secara presisi dengan AI.
-              </Text>
-            </View>
-
-            {/* Feature Showcase Grid */}
-            <View style={{ gap: 12, marginVertical: 12 }}>
-              {[
-                {
-                  title: '📸 AI Photo Recognition',
-                  desc: 'Pindai piring makan Anda via kamera untuk deteksi porsi & makronutrisi instan.',
-                  icon: Sparkles,
-                },
-                {
-                  title: '📊 Real-Time Barcode Scanner',
-                  desc: 'Scan produk kemasan menggunakan database global Open Food Facts.',
-                  icon: Barcode,
-                },
-                {
-                  title: '🔥 Custom Fitness Targets',
-                  desc: 'Formulasi kalori target & makro (Protein, Karbo, Lemak) personal harian.',
-                  icon: Scale,
-                },
-              ].map((item, idx) => {
-                const Icon = item.icon;
-                return (
-                  <View
-                    key={idx}
-                    style={{
-                      flexDirection: 'row',
-                      gap: 12,
-                      padding: 16,
-                      borderRadius: 18,
-                      backgroundColor: c.surface,
-                      borderWidth: 1,
-                      borderColor: c.border,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <View style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 10,
-                      backgroundColor: isDark ? '#1C1C1E' : '#E5E7EB',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                      <Icon size={18} color={Accent.primary} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: c.text }}>
-                        {item.title}
-                      </Text>
-                      <Text style={{ fontSize: 11, fontFamily: 'Outfit_500Medium', color: c.textMuted, marginTop: 2, lineHeight: 16 }}>
-                        {item.desc}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-
-            {/* Welcome Screen Buttons */}
-            <View style={{ gap: 12, marginTop: 20 }}>
-              <TouchableOpacity
-                onPress={() => {
-                  setAuthMode('register');
-                  setShowAuthForm(true);
-                }}
-                style={{
-                  backgroundColor: Accent.primary,
-                  paddingVertical: 15,
-                  borderRadius: 14,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontFamily: 'Outfit_700Bold', fontSize: 15, color: '#FFFFFF', letterSpacing: 0.2 }}>
-                  Mulai Sekarang
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => {
-                  setAuthMode('login');
-                  setShowAuthForm(true);
-                }}
-                style={{
-                  backgroundColor: c.surface2,
-                  borderWidth: 1,
-                  borderColor: c.border,
-                  paddingVertical: 15,
-                  borderRadius: 14,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontFamily: 'Outfit_700Bold', fontSize: 15, color: c.text, letterSpacing: 0.2 }}>
-                  Sudah Punya Akun? Masuk
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {!user && showAuthForm && (
-          <View style={{ flexGrow: 1, justifyContent: 'flex-start', paddingVertical: 8 }}>
-            {/* Header with Back Button */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <TouchableOpacity
-                onPress={() => setShowAuthForm(false)}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingVertical: 6,
-                  paddingHorizontal: 12,
-                  borderRadius: 10,
-                  backgroundColor: c.surface2,
-                  borderWidth: 1,
-                  borderColor: c.border,
-                  gap: 4,
-                }}
-              >
-                <ChevronLeft color={c.text} size={16} />
-                <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 13, color: c.text }}>
-                  Kembali
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Small Branding Logo & Header */}
-            <View style={{ alignItems: 'center', marginBottom: 20 }}>
-              <View style={{
-                width: 50,
-                height: 50,
-                borderRadius: 16,
-                backgroundColor: Accent.pale,
-                borderWidth: 1,
-                borderColor: Accent.glow,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 12,
-              }}>
-                <Flame size={26} color={Accent.primary} />
-              </View>
-              <Text style={{
-                fontSize: 24,
-                fontFamily: 'Outfit_800ExtraBold',
-                color: c.text,
-                letterSpacing: -0.5,
-              }}>
-                {authMode === 'login' ? 'Masuk ke BULK' : 'Buat Akun Baru'}
+                {authMode === 'login' ? 'Masuk ke BULK' : 'Daftar Akun BULK'}
               </Text>
               <Text style={{
                 fontSize: 13,
@@ -428,22 +267,23 @@ export default function OnboardingScreen() {
                 color: c.textSub,
                 marginTop: 6,
                 textAlign: 'center',
+                paddingHorizontal: 12,
               }}>
                 {authMode === 'login' 
-                  ? 'Masukkan email atau ID Anda untuk melanjutkan.' 
-                  : 'Daftar sekarang untuk memulai pencatatan kalori lokal.'}
+                  ? 'Masukkan kredensial Anda untuk melanjutkan pencatatan kalori lokal.' 
+                  : 'Daftar sekarang untuk memulai pencatatan kalori luring.'}
               </Text>
             </View>
 
-            {/* Form Inputs (Nama Lengkap, Email/ID, Password) */}
+            {/* Form Inputs (Nickname/nama, Email, Password) */}
             <View style={{ gap: 16 }}>
               {authMode === 'register' && (
                 <View style={{ gap: 6 }}>
-                  <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Nama / Nickname</Text>
+                  <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Nickname/nama</Text>
                   <TextInput
                     value={authName}
                     onChangeText={setAuthName}
-                    placeholder="Masukkan nama Anda"
+                    placeholder="Masukkan nama panggilan Anda"
                     placeholderTextColor={c.textMuted}
                     style={{
                       backgroundColor: c.surface,
@@ -461,7 +301,7 @@ export default function OnboardingScreen() {
               )}
 
               <View style={{ gap: 6 }}>
-                <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Email / ID</Text>
+                <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Email</Text>
                 <TextInput
                   value={authEmail}
                   onChangeText={setAuthEmail}
