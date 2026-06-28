@@ -445,8 +445,6 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
-  );
-}
 
 /* ── DataRow Component ── */
 function DataRow({
