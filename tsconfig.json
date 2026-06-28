@@ -3,6 +3,21 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      "@/components/*": [
+        "./src/shared/components/*"
+      ],
+      "@/hooks/*": [
+        "./src/shared/hooks/*"
+      ],
+      "@/constants/*": [
+        "./src/shared/constants/*"
+      ],
+      "@/config/*": [
+        "./src/shared/config/*"
+      ],
+      "@/web/*": [
+        "./src/web/*"
+      ],
       "@/*": [
         "./src/*"
       ],
