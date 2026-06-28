@@ -598,10 +598,9 @@ export default function DesktopLandingPage({
             </View>
             <View style={s.terminalBody}>
               <Text style={s.terminalLine}>
-                $ curl -O
-                https://bulk-website-daffs26.vercel.app/downloads/bulk-app.apk
+                $ curl -L -O https://expo.dev/artifacts/eas/TdXtmbJnIqVDdkA348B4-bg1PxdjrsMUOdIsAGSXGo4.apk
               </Text>
-              <Text style={s.terminalLine}>$ install bulk-app.apk</Text>
+              <Text style={s.terminalLine}>$ install TdXtmbJnIqVDdkA348B4-bg1PxdjrsMUOdIsAGSXGo4.apk</Text>
               <Text style={[s.terminalLine, { color: O, marginVertical: 8 }]}>
                 &gt;&gt; Ready to install native Android package
               </Text>
@@ -610,7 +609,7 @@ export default function DesktopLandingPage({
                 <Pressable
                   onPress={() => {
                     if (Platform.OS === "web") {
-                      window.open("/downloads/bulk-app.apk", "_blank");
+                      window.open("https://expo.dev/artifacts/eas/TdXtmbJnIqVDdkA348B4-bg1PxdjrsMUOdIsAGSXGo4.apk", "_blank");
                     }
                   }}
                   style={({ pressed }) => [

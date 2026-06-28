@@ -1,0 +1,11 @@
+# Vercel ignore list to keep deploy bundle minimal
+node_modules
+.expo
+.expo-shared
+dist
+.git
+.vercel
+*.db
+*.db-journal
+.env
+build
