@@ -104,12 +104,14 @@ function AppLayoutContent() {
   // Determine showing landing page or app
   let showLandingPage = false;
   if (isWeb) {
+    const hasForceAppQuery = typeof window !== 'undefined' && window.location.search.includes('app=true');
     if (hostname.includes('bulk-website')) {
-      showLandingPage = true; // Always landing page on website domain
+      showLandingPage = !hasForceAppQuery; // Always landing page on website domain unless app=true is requested
     } else {
-      showLandingPage = width >= 1024; // Localhost/other domains fallback (desktop gets landing page, mobile gets app preview)
+      showLandingPage = width >= 1024 && !hasForceAppQuery; // Localhost/other domains fallback
     }
   }
+
 
   /* ── The actual mobile app (rendered inside phone mockup on desktop, or full-screen on mobile) ── */
   const appContent = (
