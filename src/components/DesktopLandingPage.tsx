@@ -620,20 +620,6 @@ export default function DesktopLandingPage({
                 >
                   <Text style={s.terminalCTAText}>UNDUH APLIKASI</Text>
                 </Pressable>
-
-                <Pressable
-                  onPress={onInstallClick}
-                  style={({ pressed }) => [
-                    s.terminalCTA,
-                    {
-                      backgroundColor: "transparent",
-                      borderWidth: 1,
-                      borderColor: O,
-                      marginTop: 0,
-                    },
-                    pressed && { opacity: 0.8 },
-                  ]}
-                ></Pressable>
               </View>
             </View>
           </View>
