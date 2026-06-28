@@ -12,6 +12,7 @@ export default function OnboardingScreen() {
   const c = Colors[theme];
   const isDark = theme === 'dark';
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showAuthForm, setShowAuthForm] = useState(false);
 
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [authName, setAuthName] = useState('');
@@ -234,10 +235,10 @@ export default function OnboardingScreen() {
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
 
         {/* ══════════ STEP 0: Google Login ══════════ */}
-        {!user && (
+        {!user && !showAuthForm && (
           <View style={{ flexGrow: 1, justifyContent: 'space-between', paddingVertical: 16 }}>
             {/* Branding Header */}
-            <View style={{ alignItems: 'center', marginTop: 30, marginBottom: 20 }}>
+            <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 16 }}>
               <View style={{
                 width: 70,
                 height: 70,
@@ -247,7 +248,7 @@ export default function OnboardingScreen() {
                 borderColor: Accent.glow,
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: 20,
+                marginBottom: 16,
               }}>
                 <Flame size={36} color={Accent.primary} />
               </View>
@@ -274,7 +275,7 @@ export default function OnboardingScreen() {
             </View>
 
             {/* Feature Showcase Grid */}
-            <View style={{ gap: 12, marginVertical: 16 }}>
+            <View style={{ gap: 12, marginVertical: 12 }}>
               {[
                 {
                   title: '📸 AI Photo Recognition',
@@ -330,11 +331,115 @@ export default function OnboardingScreen() {
               })}
             </View>
 
-            {/* Bottom Login Action Area (Custom ID & Password Form) */}
-            <View style={{ gap: 14, marginTop: 12 }}>
+            {/* Welcome Screen Buttons */}
+            <View style={{ gap: 12, marginTop: 20 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setAuthMode('register');
+                  setShowAuthForm(true);
+                }}
+                style={{
+                  backgroundColor: Accent.primary,
+                  paddingVertical: 15,
+                  borderRadius: 14,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: 'Outfit_700Bold', fontSize: 15, color: '#FFFFFF', letterSpacing: 0.2 }}>
+                  Mulai Sekarang
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setAuthMode('login');
+                  setShowAuthForm(true);
+                }}
+                style={{
+                  backgroundColor: c.surface2,
+                  borderWidth: 1,
+                  borderColor: c.border,
+                  paddingVertical: 15,
+                  borderRadius: 14,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: 'Outfit_700Bold', fontSize: 15, color: c.text, letterSpacing: 0.2 }}>
+                  Sudah Punya Akun? Masuk
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {!user && showAuthForm && (
+          <View style={{ flexGrow: 1, justifyContent: 'flex-start', paddingVertical: 8 }}>
+            {/* Header with Back Button */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <TouchableOpacity
+                onPress={() => setShowAuthForm(false)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 6,
+                  paddingHorizontal: 12,
+                  borderRadius: 10,
+                  backgroundColor: c.surface2,
+                  borderWidth: 1,
+                  borderColor: c.border,
+                  gap: 4,
+                }}
+              >
+                <ChevronLeft color={c.text} size={16} />
+                <Text style={{ fontFamily: 'Outfit_600SemiBold', fontSize: 13, color: c.text }}>
+                  Kembali
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Small Branding Logo & Header */}
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <View style={{
+                width: 50,
+                height: 50,
+                borderRadius: 16,
+                backgroundColor: Accent.pale,
+                borderWidth: 1,
+                borderColor: Accent.glow,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 12,
+              }}>
+                <Flame size={26} color={Accent.primary} />
+              </View>
+              <Text style={{
+                fontSize: 24,
+                fontFamily: 'Outfit_800ExtraBold',
+                color: c.text,
+                letterSpacing: -0.5,
+              }}>
+                {authMode === 'login' ? 'Masuk ke BULK' : 'Buat Akun Baru'}
+              </Text>
+              <Text style={{
+                fontSize: 13,
+                fontFamily: 'Outfit_500Medium',
+                color: c.textSub,
+                marginTop: 6,
+                textAlign: 'center',
+              }}>
+                {authMode === 'login' 
+                  ? 'Masukkan email atau ID Anda untuk melanjutkan.' 
+                  : 'Daftar sekarang untuk memulai pencatatan kalori lokal.'}
+              </Text>
+            </View>
+
+            {/* Form Inputs (Nama Lengkap, Email/ID, Password) */}
+            <View style={{ gap: 16 }}>
               {authMode === 'register' && (
                 <View style={{ gap: 6 }}>
-                  <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Nama Lengkap</Text>
+                  <Text style={{ fontSize: 12, fontFamily: 'Outfit_600SemiBold', color: c.textSub }}>Nama / Nickname</Text>
                   <TextInput
                     value={authName}
                     onChangeText={setAuthName}
@@ -408,6 +513,7 @@ export default function OnboardingScreen() {
                   justifyContent: 'center',
                   backgroundColor: Accent.pale,
                   borderRadius: 12,
+                  marginTop: 8,
                 }}>
                   <ActivityIndicator size="small" color={Accent.primary} />
                 </View>
@@ -420,7 +526,6 @@ export default function OnboardingScreen() {
                     }
                     setIsLoggingIn(true);
                     try {
-                      // Preprocess email: if it's just a username/ID, format as ID@bulk.app
                       let emailToUse = authEmail.trim();
                       if (!emailToUse.includes('@')) {
                         emailToUse = `${emailToUse.toLowerCase()}@bulk.app`;
@@ -465,25 +570,13 @@ export default function OnboardingScreen() {
                 onPress={() => {
                   setAuthMode(authMode === 'login' ? 'register' : 'login');
                 }}
-                style={{ alignSelf: 'center', marginTop: 4 }}
+                style={{ alignSelf: 'center', marginTop: 8 }}
               >
                 <Text style={{ fontSize: 13, fontFamily: 'Outfit_600SemiBold', color: Accent.primary }}>
                   {authMode === 'login' ? 'Belum punya akun? Daftar sekarang' : 'Sudah punya akun? Masuk'}
                 </Text>
               </TouchableOpacity>
             </View>
-
-            <Text style={{
-              fontSize: 10,
-              fontFamily: 'Outfit_500Medium',
-              color: c.textMuted,
-              textAlign: 'center',
-              lineHeight: 14,
-              paddingHorizontal: 20,
-              marginTop: 16,
-            }}>
-              Dengan masuk, Anda menyetujui sinkronisasi data kebugaran Anda secara aman ke server Cloud Firestore kami.
-            </Text>
           </View>
         )}
 
