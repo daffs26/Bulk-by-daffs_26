@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppState, calculateFitnessMetrics, UserProfile } from '@/hooks/useAppState';
 import { Colors, Accent } from '@/constants/theme';
@@ -181,7 +181,11 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
-      {/* Top bar */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        {/* Top bar */}
       <View style={{
         paddingHorizontal: 20,
         paddingVertical: 16,
@@ -356,10 +360,10 @@ export default function OnboardingScreen() {
                 <TextInput
                   value={authEmail}
                   onChangeText={setAuthEmail}
-                  placeholder="nama@email.com"
+                  placeholder="Email atau Username / ID"
                   placeholderTextColor={c.textMuted}
                   autoCapitalize="none"
-                  keyboardType="email-address"
+                  keyboardType="default"
                   style={{
                     backgroundColor: c.surface,
                     color: c.text,
@@ -411,20 +415,26 @@ export default function OnboardingScreen() {
                 <TouchableOpacity
                   onPress={async () => {
                     if (!authEmail || !authPassword) {
-                      Alert.alert('Form Belum Lengkap', 'Silakan masukkan email dan password.');
+                      Alert.alert('Form Belum Lengkap', 'Silakan masukkan email/ID dan password.');
                       return;
                     }
                     setIsLoggingIn(true);
                     try {
+                      // Preprocess email: if it's just a username/ID, format as ID@bulk.app
+                      let emailToUse = authEmail.trim();
+                      if (!emailToUse.includes('@')) {
+                        emailToUse = `${emailToUse.toLowerCase()}@bulk.app`;
+                      }
+
                       if (authMode === 'login') {
-                        await loginWithEmailAndPassword(authEmail, authPassword);
+                        await loginWithEmailAndPassword(emailToUse, authPassword);
                       } else {
                         if (!authName) {
                           Alert.alert('Form Belum Lengkap', 'Silakan masukkan nama Anda.');
                           setIsLoggingIn(false);
                           return;
                         }
-                        await registerWithEmailAndPassword(authName, authEmail, authPassword);
+                        await registerWithEmailAndPassword(authName, emailToUse, authPassword);
                       }
                     } catch (err: any) {
                       Alert.alert('Gagal', err.message || 'Terjadi kesalahan sistem.');
@@ -855,6 +865,7 @@ export default function OnboardingScreen() {
           </View>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
