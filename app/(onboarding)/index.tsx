@@ -234,7 +234,11 @@ export default function OnboardingScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} 
+        style={{ paddingHorizontal: 20, paddingVertical: 16 }}
+      >
 
         {/* ══════════ STEP 0: Google Login ══════════ */}
         {!user && (
