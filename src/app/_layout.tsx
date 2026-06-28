@@ -108,7 +108,7 @@ function AppLayoutContent() {
     if (hostname.includes('bulk-website')) {
       showLandingPage = !hasForceAppQuery; // Always landing page on website domain unless app=true is requested
     } else {
-      showLandingPage = width >= 1024 && !hasForceAppQuery; // Localhost/other domains fallback
+      showLandingPage = false; // App domain and localhost always show the mobile app directly
     }
   }
 
