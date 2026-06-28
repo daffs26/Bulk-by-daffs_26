@@ -4,22 +4,22 @@
     "strict": true,
     "paths": {
       "@/components/*": [
-        "./src/shared/components/*"
+        "./shared/components/*"
       ],
       "@/hooks/*": [
-        "./src/shared/hooks/*"
+        "./shared/hooks/*"
       ],
       "@/constants/*": [
-        "./src/shared/constants/*"
+        "./shared/constants/*"
       ],
       "@/config/*": [
-        "./src/shared/config/*"
+        "./shared/config/*"
       ],
       "@/web/*": [
-        "./src/web/*"
+        "./web/*"
       ],
       "@/*": [
-        "./src/*"
+        "./*"
       ],
       "@/assets/*": [
         "./assets/*"

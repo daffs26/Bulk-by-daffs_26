@@ -1,9 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/app/**/*.{js,jsx,ts,tsx}",
-    "./src/components/**/*.{js,jsx,ts,tsx}",
-    "./src/hooks/**/*.{js,jsx,ts,tsx}"
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./web/**/*.{js,jsx,ts,tsx}",
+    "./shared/**/*.{js,jsx,ts,tsx}"
   ],
   presets: [require("nativewind/preset")],
   darkMode: "class",
