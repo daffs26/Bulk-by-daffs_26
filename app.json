@@ -18,8 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.daffs26.bulk",
-      "enableProguardInReleaseBuilds": true
+      "package": "com.daffs26.bulk"
     },
     "web": {
       "output": "static",
